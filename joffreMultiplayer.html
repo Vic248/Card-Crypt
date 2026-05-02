@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../schooltoolicon.png" type="image/x-icon">
+  <title>Joffre - Multijoueur</title>
+  <style>
+    h1 {
+      font-size: 1.5rem;
+    }
+    #menu-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1001;
+      transition: background-color 0.3s;
+    }
+
+    #menu-btn:hover {
+      background-color: #1f2e3a;
+    }
+
+    #menu {
+      position: fixed;
+      top: 0;
+      left: -260px;
+      width: 260px;
+      height: 100%;
+      background-color: #2c3e50;
+      color: white;
+      padding-top: 70px;
+      transition: left 0.3s ease;
+      z-index: 1000;
+      box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #menu.open {
+      left: 0;
+    }
+
+    #menu a {
+      display: flex;
+      align-items: center;
+      padding: 14px 24px;
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    #menu a i {
+      margin-right: 12px;
+      width: 20px;
+    }
+
+    #menu a:hover {
+      background-color: #34495e;
+    }
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 28px;
+        }
+    }
+    .card {
+      width: 70px;
+      margin: 8px;
+      cursor: pointer;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1.5px 4px rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.18);
+      transition: transform 0.18s, box-shadow 0.18s;
+      border: 2px solid rgba(255,255,255,0.18);
+    }
+
+    .card:hover {
+      transform: scale(1.12) translateY(-6px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      z-index: 2;
+    }
+
+    .card.special-red {
+      box-shadow: 0 0 18px 6px #ff1744, 0 4px 16px rgba(0,0,0,0.18);
+    }
+
+    .card.special-brown {
+      box-shadow: 0 0 18px 6px #a0522d, 0 4px 16px rgba(0,0,0,0.18);
+    }
+
+    .card.teamate-card {
+      box-shadow: 0 0 18px 6px #222, 0 4px 16px rgba(0,0,0,0.18);
+    }
+
+    .card.winner {
+      border: 3px solid #ffd700;
+      box-shadow: 0 0 24px 8px #ffd700, 0 4px 16px rgba(0,0,0,0.18);
+    }
+
+    /* Card playing animations */
+    @keyframes slideUpAndFade {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) scale(0.5);
+        opacity: 0;
+      }
+    }
+
+    @keyframes dropOnTable {
+      0% {
+        transform: scale(2);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes specialRedPulse {
+      0%, 100% {
+        box-shadow: 0 0 18px 6px #ff1744, 0 4px 16px rgba(0,0,0,0.18);
+      }
+      50% {
+        box-shadow: 0 0 35px 12px #ff1744, 0 8px 32px rgba(255,23,68,0.4);
+      }
+    }
+
+    @keyframes specialBrownPulse {
+      0%, 100% {
+        box-shadow: 0 0 18px 6px #a0522d, 0 4px 16px rgba(0,0,0,0.18);
+      }
+      50% {
+        box-shadow: 0 0 35px 12px #8b4513, 0 8px 32px rgba(139,69,19,0.4);
+      }
+    }
+
+    .card.playing {
+      animation: slideUpAndFade 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+
+    .card.appearing {
+      animation: dropOnTable 0.5s ease-out forwards;
+    }
+
+    .card.appearing.special-red {
+      animation: dropOnTable 0.5s ease-out forwards, specialRedPulse 1s ease-in-out 0.5s 2;
+    }
+
+    .card.appearing.special-brown {
+      animation: dropOnTable 0.5s ease-out forwards, specialBrownPulse 1s ease-in-out 0.5s 2;
+    }
+
+    /* Turn indicator - glowing border around active player */
+    .player.hand.active-turn {
+      box-shadow: 0 0 30px 5px #ffd700, 0 2px 8px rgba(0,0,0,0.08);
+      animation: turnPulse 2s ease-in-out infinite;
+      border: 2px solid #ffd700;
+    }
+
+    @keyframes turnPulse {
+      0%, 100% {
+        box-shadow: 0 0 30px 5px #ffd700, 0 2px 8px rgba(0,0,0,0.08);
+      }
+      50% {
+        box-shadow: 0 0 40px 8px #ffed4e, 0 4px 16px rgba(255,215,0,0.3);
+      }
+    }
+
+    /* Hover effect on opponent card backs */
+    #player-top .card:hover,
+    #player-left .card:hover,
+    #player-right .card:hover {
+      transform: scale(1.05);
+      filter: brightness(1.2);
+    }
+
+    #player-left .card:hover {
+      transform: rotate(-90deg) scale(1.15);
+      z-index: 10;
+    }
+
+    #player-right .card:hover {
+      transform: rotate(90deg) scale(1.15);
+      z-index: 10;
+    }
+
+    /* Score animation */
+    @keyframes scoreChange {
+      0%, 100% {
+        transform: translateX(-50%) scale(1);
+      }
+      50% {
+        transform: translateX(-50%) scale(1.1);
+        color: #fff;
+      }
+    }
+
+    #scoreDisplay.score-changed {
+      animation: scoreChange 0.5s ease-out;
+    }
+
+    /* Card fan effect for bottom player */
+    #player-bottom {
+      perspective: 1000px;
+    }
+
+    #player-bottom .card {
+      transition: transform 0.3s ease, margin 0.3s ease;
+    }
+
+    #player-bottom .card:hover {
+      transform: translateY(-20px) scale(1.15) !important;
+      z-index: 10;
+      margin: 8px 12px;
+    }
+
+    /* Confetti for winner */
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(600px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      z-index: 100;
+      animation: confetti-fall 2s linear forwards;
+    }
+
+    /* Background particles */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0.3;
+      animation: float 20s infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      33% {
+        transform: translate(30px, -30px) rotate(120deg);
+      }
+      66% {
+        transform: translate(-20px, 20px) rotate(240deg);
+      }
+    }
+
+    /* 3D table effect */
+    #table {
+      display: grid;
+      grid-template-areas:
+        "top top top"
+        "left center right"
+        "bottom bottom bottom";
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: auto 50vh auto;
+      gap: 10px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
+      border-radius: 24px;
+      box-shadow: 
+        0 8px 32px 0 rgba(31,38,135,0.18),
+        inset 0 2px 10px rgba(255,255,255,0.1),
+        0 20px 60px rgba(0,0,0,0.3);
+      padding: 18px;
+      margin: 70px auto 20px auto;
+      max-width: 1400px;
+      width: 95vw;
+      height: calc(100vh - 90px);
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    /* Trump color indicator */
+    #trump-indicator {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 1999;
+      display: none;
+      animation: trumpAppear 0.5s ease-out;
+    }
+
+    @keyframes trumpAppear {
+      0% {
+        transform: translateX(-50%) scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    #trump-indicator.Rouge {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      box-shadow: 0 0 20px #e74c3c;
+    }
+
+    #trump-indicator.Bleu {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      box-shadow: 0 0 20px #3498db;
+    }
+
+    #trump-indicator.Vert {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+      box-shadow: 0 0 20px #2ecc71;
+    }
+
+    #trump-indicator.Brun {
+      background: linear-gradient(135deg, #a0522d, #8b4513);
+      color: white;
+      box-shadow: 0 0 20px #a0522d;
+    }
+
+    /* Sparkle effect for winner */
+    @keyframes sparkle {
+      0%, 100% {
+        opacity: 0;
+        transform: scale(0);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #ffd700, transparent);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: sparkle 1s ease-out forwards;
+      z-index: 150;
+    }
+
+    /* Smoke effect for special cards - REMOVED */
+
+    /* Game End Screen */
+    #gameEndScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    #gameEndScreen.show {
+      display: flex;
+    }
+
+    .end-screen-content {
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      padding: 50px 80px;
+      border-radius: 30px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.5s ease-out;
+      border: 3px solid #ffd700;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .winner-title {
+      font-size: 4rem;
+      color: #ffd700;
+      margin: 0 0 20px 0;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .final-score {
+      font-size: 2rem;
+      color: #ecf0f1;
+      margin: 20px 0;
+    }
+
+    .xp-gained {
+      font-size: 1.5rem;
+      color: #2ecc71;
+      margin: 20px 0;
+      animation: glow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% {
+        text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+      }
+      50% {
+        text-shadow: 0 0 20px rgba(46, 204, 113, 1);
+      }
+    }
+
+    .end-screen-buttons {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .end-screen-btn {
+      padding: 15px 40px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: bold;
+    }
+
+    .restart-btn {
+      background: #3498db;
+      color: white;
+    }
+
+    .restart-btn:hover {
+      background: #2980b9;
+      transform: scale(1.05);
+    }
+
+    .lobby-btn {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .lobby-btn:hover {
+      background: #7f8c8d;
+      transform: scale(1.05);
+    }
+
+    .host-only-message {
+      font-size: 1.1rem;
+      color: #f39c12;
+      margin-top: 20px;
+      font-style: italic;
+    }
+
+    /* Fireworks for winner */
+    @keyframes firework {
+      0% {
+        transform: translate(0, 0);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--x), var(--y));
+        opacity: 0;
+      }
+    }
+
+    .firework {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: firework 1s ease-out forwards;
+    }
+
+    .player.hand {
+      transform-origin: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #232526 0%, #414345 100%);
+      color: #f8f8f8;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #game-content, #scoreDisplay, #log, #bid-interface {
+      background: rgba(255,255,255,0.10);
+      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    #scoreDisplay {
+      position: fixed;
+      top: 0;
+      left: 20px;
+      transform: none;
+      background: rgba(0,0,0,0.7);
+      color: #ffd700;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      padding: 15px 30px 10px 30px;
+      border-radius: 0 0 18px 18px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+      z-index: 2000;
+      text-align: center;
+      min-width: 280px;
+    }
+
+    #table {
+      display: grid;
+      grid-template-areas:
+        "top top top"
+        "left center right"
+        "bottom bottom bottom";
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: auto 50vh auto;
+      gap: 10px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+      padding: 18px;
+      margin: 70px auto 0 auto;
+      max-width: 1200px;
+      height: calc(100vh - 90px);
+      position: relative;
+    }
+
+    .player.hand {
+      margin: 0;
+      padding: 8px 0;
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #player-bottom, #player-top {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    #player-bottom {
+      margin-top: 0;
+    }
+
+    #player-left {
+      display: grid;
+      grid-auto-flow: row;
+      grid-auto-rows: minmax(0, 1fr);
+      align-items: center;
+      justify-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 20px 10px;
+      overflow: hidden;
+      position: relative;
+      gap: 5px;
+    }
+    
+    #player-left .card {
+      transform: rotate(-90deg);
+      transform-origin: center center;
+      transition: all 0.3s ease;
+      grid-column: 1;
+    }
+
+    #player-right {
+      display: grid;
+      grid-auto-flow: row;
+      grid-auto-rows: minmax(0, 1fr);
+      align-items: center;
+      justify-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 20px 10px;
+      overflow: hidden;
+      position: relative;
+      gap: 5px;
+    }
+    
+    #player-right .card {
+      transform: rotate(90deg);
+      transform-origin: center center;
+      transition: all 0.3s ease;
+      grid-column: 1;
+    }
+
+    #center {
+      justify-items: center;
+      align-content: center;
+    }
+
+    #player-left .card:first-child,
+    #player-right .card:first-child {
+      margin: 0;
+    }
+
+    #bid-interface {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(51, 51, 51, 0.95);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      z-index: 999;
+      text-align: center;
+      min-width: 350px;
+    }
+
+    #bid-interface h2 {
+      margin-top: 0;
+      color: #f7c74f;
+    }
+
+    #bid-interface label {
+      font-size: 1.1rem;
+      margin-right: 10px;
+    }
+
+    #bid-interface input {
+      width: 80px;
+      padding: 8px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      border: 2px solid #555;
+      background: #222;
+      color: white;
+      text-align: center;
+    }
+
+    #bid-interface button {
+      margin: 15px 10px 5px 10px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #btnBid {
+      background: #f7c74f;
+      color: #222;
+    }
+
+    #btnBid:hover {
+      background: #ffd85a;
+    }
+
+    #btnPass {
+      background: #e74c3c;
+      color: white;
+    }
+
+    #btnPass:hover {
+      background: #c0392b;
+    }
+
+    #trump-interface {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(51, 51, 51, 0.95);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      z-index: 999;
+      text-align: center;
+      min-width: 400px;
+    }
+
+    #trump-interface h2 {
+      margin-top: 0;
+      color: #f7c74f;
+    }
+
+    .trump-option {
+      display: inline-block;
+      margin: 10px;
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      border: 3px solid transparent;
+    }
+
+    .trump-option:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+
+    .trump-rouge { background: #e74c3c; color: white; }
+    .trump-bleu { background: #3498db; color: white; }
+    .trump-vert { background: #2ecc71; color: white; }
+    .trump-brun { background: #8b4513; color: white; }
+
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #232526 0%, #414345 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #progress-bar {
+      width: 300px;
+      height: 20px;
+      background: #333;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    #progress-fill {
+      width: 0%;
+      height: 100%;
+      background: #f7c74f;
+      transition: width 0.3s;
+    }
+
+    #tip {
+      margin-top: 20px;
+      color: #aaa;
+      font-style: italic;
+    }
+
+    .player-label {
+      position: absolute;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    #label-bottom { bottom: 5px; left: 50%; transform: translateX(-50%); }
+    #label-top { top: 5px; left: 50%; transform: translateX(-50%); }
+    #label-left { left: 5px; top: 50%; transform: translateY(-50%); }
+    #label-right { right: 5px; top: 50%; transform: translateY(-50%); }
+    #chatContainer {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 260px;
+      height: 300px;
+      background: rgba(0,0,0,0.75);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      z-index: 9999;
+    }
+
+    #chatMessages {
+      flex: 1;
+      overflow-y: auto;
+      color: white;
+      font-size: 0.9rem;
+    }
+
+    #chatInput {
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #333;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+    <button id="menu-btn" onmouseenter="mouseEnter('bars')" onmouseleave="mouseLeave('bars')"><i class="fas fa-bars" id="bars"></i> Menu</button>
+
+    <div id="scoreDisplay">
+      <h1 id="scoreTitle">Team 1: 0 | Team 2: 0</h1>
+    </div>
+
+    <!-- 🔴 Game Chat -->
+    <div id="chatContainer">
+      <div id="chatMessages"></div>
+      <input id="chatInput" type="text" placeholder="Message..." />
+    </div>
+
+    <div id="trump-indicator">🃏 Atout: <span id="trump-text">-</span></div>
+
+  <div id="loading-screen">
+    <h1>Chargement du jeu de Joffre...</h1>
+    <div id="progress-bar">
+      <div id="progress-fill"></div>
+    </div>
+    <div id="tip">Astuce : Toujours prendre en brun</div>
+  </div>
+
+  <!-- Background particles -->
+  <div id="particles-container"></div>
+
+  <div id="game-content" style="display: none;"></div>
+
+  <div id="table">
+    <div style="grid-area: top; position: relative;">
+      <div id="player-top" class="player hand"></div>
+      <div id="label-top" class="player-label">Joueur</div>
+    </div>
+    <div style="grid-area: right; position: relative;">
+      <div id="player-right" class="player hand"></div>
+      <div id="label-right" class="player-label">Joueur</div>
+    </div>
+    <div style="grid-area: left; position: relative;">
+      <div id="player-left" class="player hand"></div>
+      <div id="label-left" class="player-label">Joueur</div>
+    </div>
+    <div style="grid-area: bottom; position: relative;">
+      <div id="player-bottom" class="player hand"></div>
+      <div id="label-bottom" class="player-label">Vous</div>
+    </div>
+    <div id="center" style="grid-area: center;">
+      <div id="center-play"></div>
+    </div>
+  </div>
+  <div id="log"></div>
+
+  <div id="bid-interface">
+    <h2>Souhaitez-vous prendre ?</h2>
+    <p id="bid-status">Enchère actuelle : Aucune</p>
+    <label>Points : </label>
+    <input id="bidInput" type="number" min="7" max="12" value="7" />
+    <div>
+      <button id="btnBid">Prendre</button>
+      <button id="btnPass">Passer</button>
+    </div>
+  </div>
+
+  <!-- Game End Screen -->
+  <div id="gameEndScreen">
+    <div class="end-screen-content">
+      <h1 class="winner-title">🏆 <span id="winnerTeamName">Équipe 1</span> Gagne! 🏆</h1>
+      <p class="final-score">Score Final: <span id="finalScore">Team 1: 41 | Team 2: 30</span></p>
+      <p class="xp-gained" id="xpGained">+50 XP Gagné!</p>
+      <div class="end-screen-buttons" id="endScreenButtons">
+        <button class="end-screen-btn restart-btn" id="restartGameBtn">Rejouer</button>
+        <button class="end-screen-btn lobby-btn" id="backToLobbyBtn">Retour au Lobby</button>
+      </div>
+      <p class="host-only-message" id="hostOnlyMessage" style="display: none;">Seul l'hôte peut redémarrer la partie</p>
+    </div>
+  </div>
+
+  <script src="/auth.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script src="/menu.js"></script>
+  <script>
+    loadMenu();
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVlj8ZM8tipP_CEZZsspt5gnPupMQCIKU",
+      authDomain: "joffre-17fad.firebaseapp.com",
+      databaseURL: "https://joffre-17fad-default-rtdb.firebaseio.com",
+      projectId: "joffre-17fad",
+      storageBucket: "joffre-17fad.firebasestorage.app",
+      messagingSenderId: "379635357873",
+      appId: "1:379635357873:web:a16437780f312ea56eaa90",
+      measurementId: "G-W0HPGLN9E1"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <script>
+    document.getElementById("menu-btn").addEventListener("click", function () {
+      document.getElementById("menu").classList.toggle("open");
+    });
+
+    function mouseEnter(id) {
+      document.getElementById(id).classList.add('fa-bounce');
+    }
+    
+    function mouseLeave(id) {
+      document.getElementById(id).classList.remove('fa-bounce');
+    }
+
+    const imagePaths = [
+      "0_Rouge.png", "1_Rouge.png", "2_Rouge.png", "3_Rouge.png", "4_Rouge.png", "5_Rouge.png", "6_Rouge.png", "7_Rouge.png",
+      "0_Vert.png", "1_Vert.png", "2_Vert.png", "3_Vert.png", "4_Vert.png", "5_Vert.png", "6_Vert.png", "7_Vert.png",
+      "0_Bleu.png", "1_Bleu.png", "2_Bleu.png", "3_Bleu.png", "4_Bleu.png", "5_Bleu.png", "6_Bleu.png", "7_Bleu.png",
+      "0_Brun.png", "1_Brun.png", "2_Brun.png", "3_Brun.png", "4_Brun.png", "5_Brun.png", "6_Brun.png", "7_Brun.png"
+    ];
+
+    const tips = [
+      "Astuce: Le but est de gagner le bonhomme brun",
+      "Astuce: Le but est de perdre le bonhomme rouge",
+      "Astuce: ne jamais gagner"
+    ];
+
+    document.getElementById("tip").innerText = tips[Math.floor(Math.random() * tips.length)];
+
+    let loadedCount = 0;
+    const totalImages = imagePaths.length;
+
+    const updateProgress = () => {
+      loadedCount++;
+      const percent = Math.floor((loadedCount / totalImages) * 100);
+      document.getElementById("progress-fill").style.width = percent + "%";
+      if (loadedCount === totalImages) {
+        document.getElementById("loading-screen").style.display = "none";
+        document.getElementById("game-content").style.display = "block";
+      }
+    };
+
+    imagePaths.forEach(src => {
+      const img = new Image();
+      img.onload = updateProgress;
+      img.onerror = updateProgress;
+      img.src = src;
+    });
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const myPlayerNumber = parseInt(urlParams.get('playerNumber')) - 1; // Convert to 0-based
+    const lobbyId = urlParams.get('lobbyId');
+    const userId = urlParams.get('userId');
+    const username = urlParams.get('username');
+    const isHost = urlParams.get('isHost') === 'true';
+    const isBot = urlParams.get('isBot') === 'true';
+    
+    // Get botPlayers from URL (only host sends this)
+    let botPlayersFromURL = null;
+    if (urlParams.get('botPlayers')) {
+      try {
+        botPlayersFromURL = JSON.parse(urlParams.get('botPlayers'));
+        console.log("Received botPlayers from URL:", botPlayersFromURL);
+      } catch (e) {
+        console.error("Failed to parse botPlayers:", e);
+      }
+    }
+
+    // Game state
+    let gameStateRef;
+    let playersRef;
+    let lobbyRef;
+    let myPlayerId;
+    let playerNames = {};
+    let isMyTurn = false;
+    let lobbyJoined = false; // Track if we've successfully joined
+    let originalTeamOneScore;
+    let originalTeamTwoScore;
+
+    // Firebase Auth
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        myPlayerId = user.uid;
+        gameStateRef = firebase.database().ref(`lobbies/${lobbyId}/gameState`);
+        playersRef = firebase.database().ref(`lobbies/${lobbyId}/players`);
+        lobbyRef = firebase.database().ref(`lobbies/${lobbyId}`);
+
+        const chatRef = lobbyRef.child("gameChat");
+        const chatInput = document.getElementById("chatInput");
+        const chatMessages = document.getElementById("chatMessages");
+
+        // SEND MESSAGE
+        chatInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && chatInput.value.trim() !== "") {
+            chatRef.push({
+              name: username,
+              text: chatInput.value.trim(),
+              time: Date.now()
+            });
+            chatInput.value = "";
+          }
+        });
+
+        // RECEIVE MESSAGE
+        chatRef.on("child_added", (snapshot) => {
+          const msg = snapshot.val();
+          const div = document.createElement("div");
+
+          const t = new Date(msg.time);
+          const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          div.innerHTML = `<strong>${msg.name}</strong> <span style="color:#aaa;">(${timeStr})</span><br>${msg.text}`;
+          chatMessages.appendChild(div);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        // Register my name as soon as I load into the game
+        gameStateRef.child(`playerNames/${myPlayerNumber}`).set(username);
+        console.log("Set my username into playerNames:", myPlayerNumber, username);
+
+        console.log("Loading players from:", `lobbies/${lobbyId}/players`);
+
+        // Immediately report my username to gameState (for everyone)
+        gameStateRef.child(`playerNames/${myPlayerNumber}`).set(username);
+
+        lobbyRef.onDisconnect().remove();
+
+        // Wait a bit before starting lobby deletion listener
+        setTimeout(() => {
+          lobbyJoined = true;
+          listenForLobbyDeletion();
+        }, 2000);
+
+        // Initialize game if host
+        if (isHost) {
+          console.log("I am the host, initializing game...");
+          setTimeout(() => {
+            initializeGame();
+          }, 500);
+        }
+
+        // Listen to game state
+        gameStateRef.on('value', handleGameStateUpdate);
+      }
+    });
+
+    firebase.auth().signInAnonymously();
+
+    // Create background particles
+    function createParticles() {
+      const container = document.getElementById('particles-container');
+      const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
+      
+      for (let i = 0; i < 15; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.width = (Math.random() * 4 + 2) + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    createParticles();
+
+    function listenForLobbyDeletion() {
+      lobbyRef.on('value', (snapshot) => {
+        // Only react if we've successfully joined and lobby no longer exists
+        if (lobbyJoined && !snapshot.exists()) {
+          console.log("Lobby deleted, redirecting to lobby screen");
+          lobbyRef.off(); // Stop listening
+          alert("Un joueur a quitté la partie. Vous allez être redirigé.");
+          window.location.href = 'joffreLobby.html';
+        } else if (snapshot.exists()) {
+          // Lobby exists, everything is fine
+          lobbyJoined = true;
+        }
+      });
+    }
+
+    function initializeGame() {
+      const suits = ['Bleu', 'Brun', 'Rouge', 'Vert'];
+      const values = [0, 1, 2, 3, 4, 5, 6, 7];
+      let deck = [];
+      
+      for (let suit of suits) {
+        for (let val of values) {
+          deck.push(`${val}_${suit}`);
+        }
+      }
+      
+      // Shuffle deck
+      deck.sort(() => Math.random() - 0.5);
+      
+      // Deal cards
+      const hands = {0: [], 1: [], 2: [], 3: []};
+      for (let i = 0; i < deck.length; i++) {
+        hands[i % 4].push(deck[i]);
+      }
+
+      // Use botPlayers from URL if provided, otherwise read from lobby
+      if (botPlayersFromURL) {
+        console.log("Using botPlayers from URL:", botPlayersFromURL);
+        initializeWithBotPlayers(hands, botPlayersFromURL);
+      } else {
+        console.log("No botPlayers in URL, reading from lobby");
+        // Fallback: Read the lobby players to determine who is a bot
+        playersRef.once('value').then(snapshot => {
+          const players = snapshot.val() || {};
+          console.log("Host initializing - players from lobby:", players);
+          
+          // Mark all positions as bots by default
+          const botPlayers = {0: true, 1: true, 2: true, 3: true};
+          
+          // Mark real players as NOT bots
+          Object.values(players).forEach(player => {
+            const playerNum = player.playerNumber - 1; // Convert 1-4 to 0-3
+            botPlayers[playerNum] = false;
+            console.log(`Position ${playerNum} is a REAL player: ${player.name}`);
+          });
+
+          console.log("Host set botPlayers:", botPlayers);
+          initializeWithBotPlayers(hands, botPlayers);
+        });
+      }
+    }
+
+    function initializeWithBotPlayers(hands, botPlayers) {
+      // Read player names from lobby
+      playersRef.once('value').then(snapshot => {
+        const players = snapshot.val() || {};
+        const playerNamesForGame = {0: null, 1: null, 2: null, 3: null};
+        
+        // Map player names to their positions (0-3)
+        playerNamesForGame[myPlayerNumber] = username; // Ensure my name is set
+        
+        console.log("Player names for game:", playerNamesForGame);
+        
+        // Initialize game state
+        gameStateRef.set({
+          hands: hands,
+          currentTurn: 0,
+          playedCards: [],
+          trumpColor: "",
+          demandedColor: "",
+          currentLeader: 0,
+          teamOneScore: 0,
+          teamTwoScore: 0,
+          dealerIndex: Math.floor(Math.random() * 4),
+          roundNumber: 0,
+          biddingPhase: true,
+          currentBidder: -1,
+          highestBid: 0,
+          highestBidder: -1,
+          passedPlayers: [],
+          bidsPlaced: [],
+          takerTeam: -1,
+          botPlayers: botPlayers,
+          playerNames: playerNamesForGame,
+          waitingForNextRound: false
+        }).then(() => {
+          console.log("Game state initialized by host with botPlayers:", botPlayers);
+          
+          // Start bidding after a short delay
+          setTimeout(() => {
+            gameStateRef.once('value').then(snap => {
+              const state = snap.val();
+              const firstBidder = (state.dealerIndex + 1) % 4;
+              console.log("Starting bidding with first bidder:", firstBidder);
+              console.log("botPlayers at start:", state.botPlayers);
+              gameStateRef.update({
+                currentBidder: firstBidder
+              });
+            });
+          }, 1000);
+
+          gameStateRef.child(`playerNames/${myPlayerNumber}`).set(username);
+        });
+      });
+    }
+
+    function handleGameStateUpdate(snapshot) {
+      const state = snapshot.val();
+      if (!state) return;
+
+      console.log("Game state updated:", state.currentBidder, "My number:", myPlayerNumber);
+      console.log("Bot players:", state.botPlayers);
+
+      // Update playerNames from gameState
+      if (state.playerNames) {
+        playerNames = state.playerNames;
+        console.log("Updated playerNames from gameState:", playerNames);
+        updatePlayerLabels();
+      }
+
+      // Update UI
+      renderHands(state);
+      updateCenter(state);
+      updateScore(state);
+      updateTurnIndicator(state);
+      updateTrumpIndicator(state);
+      
+      // Handle bidding phase
+      if (state.biddingPhase) {
+        // Host should always check if bidding should end
+        if (isHost) {
+          const bidsPlaced = state.bidsPlaced || [];
+          if (bidsPlaced.length >= 4) {
+            console.log("Host detected bidding should end with bidsPlaced:", bidsPlaced);
+            checkBiddingEnd();
+          }
+        }
+        
+        if (state.currentBidder === myPlayerNumber) {
+          console.log("My turn to bid!");
+          showBiddingInterface(state);
+        } else {
+          hideBiddingInterface();
+          
+          // If it's a bot's turn to bid and I'm the host
+          if (isHost && state.botPlayers && state.botPlayers[state.currentBidder] === true) {
+            console.log("Bot's turn to bid, I'm host, triggering bot");
+            setTimeout(() => {
+              botBid();
+            }, 1000);
+          } else {
+            console.log("Not my turn, not a bot's turn, or I'm not host");
+          }
+        }
+      } else {
+        hideBiddingInterface();
+      }
+
+      // Update log
+      updateLog(state);
+
+      // Check for round end
+      if (state.waitingForNextRound && isHost) {
+        setTimeout(() => {
+          startNextRound();
+        }, 3000);
+      }
+
+      // Check for game end
+      if (state.teamOneScore >= 41) {
+        log("🏆 L'équipe 1 gagne la partie!");
+        if (!state.gameEnded) {
+          gameStateRef.update({ gameEnded: true });
+          showGameEndScreen(1, state.teamOneScore, state.teamTwoScore);
+        }
+      } else if (state.teamTwoScore >= 41) {
+        log("🏆 L'équipe 2 gagne la partie!");
+        if (!state.gameEnded) {
+          gameStateRef.update({ gameEnded: true });
+          showGameEndScreen(2, state.teamOneScore, state.teamTwoScore);
+        }
+      }
+      
+      // Listen for game end state change
+      if (state.gameEnded && !document.getElementById('gameEndScreen').classList.contains('show')) {
+        const winningTeam = state.teamOneScore >= 41 ? 1 : 2;
+        showGameEndScreen(winningTeam, state.teamOneScore, state.teamTwoScore);
+      }
+    }
+
+    function showBiddingInterface(state) {
+      const bidInterface = document.getElementById('bid-interface');
+      const bidInput = document.getElementById('bidInput');
+      const bidStatus = document.getElementById('bid-status');
+      
+      if (state.highestBid > 0) {
+        bidStatus.textContent = `Enchère actuelle : ${state.highestBid}`;
+        bidInput.min = state.highestBid + 1;
+        bidInput.value = Math.min(state.highestBid + 1, 12);
+      } else {
+        bidStatus.textContent = "Enchère actuelle : Aucune";
+        bidInput.min = 7;
+        bidInput.value = 7;
+      }
+
+      // If dealer and everyone passed, must take
+      if (state.currentBidder === state.dealerIndex && state.passedPlayers.length === 3) {
+        document.getElementById('btnPass').style.display = 'none';
+        bidStatus.textContent = "Vous devez prendre (tous ont passé)";
+      } else {
+        document.getElementById('btnPass').style.display = 'inline-block';
+      }
+
+      bidInterface.style.display = 'block';
+    }
+
+    function hideBiddingInterface() {
+      document.getElementById('bid-interface').style.display = 'none';
+    }
+
+    document.getElementById('btnBid').addEventListener('click', () => {
+      const bidValue = parseInt(document.getElementById('bidInput').value);
+      
+      gameStateRef.once('value').then(snapshot => {
+        const state = snapshot.val();
+        
+        if (bidValue < 7 || bidValue > 12) {
+          alert("L'enchère doit être entre 7 et 12");
+          return;
+        }
+        
+        if (bidValue <= state.highestBid && state.highestBid > 0) {
+          alert("Vous devez enchérir plus haut");
+          return;
+        }
+
+        // Place bid
+        const bidsPlaced = state.bidsPlaced || [];
+        bidsPlaced.push(state.currentBidder);
+        
+        const nextBidder = (state.currentBidder + 1) % 4;
+        
+        console.log(`Player ${state.currentBidder} bid ${bidValue}. bidsPlaced now:`, bidsPlaced);
+        
+        gameStateRef.update({
+          highestBid: bidValue,
+          highestBidder: state.currentBidder,
+          currentBidder: nextBidder,
+          bidsPlaced: bidsPlaced,
+          lastBidderPosition: state.currentBidder
+        }).then(() => {
+          checkBiddingEnd();
+        });
+      });
+    });
+
+    document.getElementById('btnPass').addEventListener('click', () => {
+      gameStateRef.once('value').then(snapshot => {
+        const state = snapshot.val();
+        const passedPlayers = state.passedPlayers || [];
+        passedPlayers.push(state.currentBidder);
+        
+        const bidsPlaced = state.bidsPlaced || [];
+        bidsPlaced.push(state.currentBidder);
+        
+        const nextBidder = (state.currentBidder + 1) % 4;
+        
+        gameStateRef.update({
+          passedPlayers: passedPlayers,
+          currentBidder: nextBidder,
+          bidsPlaced: bidsPlaced
+        });
+
+        checkBiddingEnd();
+      });
+    });
+
+    let isCheckingBiddingEnd = false;
+
+    function checkBiddingEnd() {
+      if (!isHost) return;
+      if (isCheckingBiddingEnd) {
+        console.log("Already checking bidding end, skipping");
+        return;
+      }
+
+      isCheckingBiddingEnd = true;
+
+      setTimeout(() => {
+        gameStateRef.once('value').then(snapshot => {
+          const state = snapshot.val();
+          const bidsPlaced = state.bidsPlaced || [];
+          
+          console.log("Checking bidding end. bidsPlaced:", bidsPlaced, "length:", bidsPlaced.length, "highestBidder:", state.highestBidder);
+          
+          // Case 1: All 4 players have acted - bidding is over
+          if (bidsPlaced.length >= 4) {
+            console.log("✅ Bidding complete! Ending bidding phase.");
+            if (state.highestBidder >= 0) {
+              // Someone bid, they win
+              endBidding(state.highestBidder, state.highestBid);
+            } else {
+              // Nobody bid, dealer must take at 7
+              endBidding(state.dealerIndex, 7);
+            }
+            isCheckingBiddingEnd = false;
+            return;
+          }
+          
+          isCheckingBiddingEnd = false;
+        });
+      }, 100);
+    }
+
+    // Replace the botBid() and chooseAdvancedCard() functions with these improved versions
+
+function botBid() {
+  if (!isHost) return;
+
+  gameStateRef.once('value').then(snapshot => {
+    const state = snapshot.val();
+    const currentBidder = state.currentBidder;
+    
+    if (!state.botPlayers || state.botPlayers[currentBidder] !== true) {
+      console.log(`Position ${currentBidder} is not a bot, skipping`);
+      return;
+    }
+
+    console.log(`Bot at position ${currentBidder} is bidding`);
+
+    const hand = state.hands[currentBidder] || [];
+    const bidsPlaced = state.bidsPlaced || [];
+    const passedPlayers = state.passedPlayers || [];
+    
+    // Check if bot must take (dealer and everyone passed)
+    const mustTake = state.dealerIndex === currentBidder && passedPlayers.length === 3;
+    
+    // Check if bot has 4+ cards in any color (required to bid)
+    const colorCounts = {Rouge: 0, Bleu: 0, Vert: 0, Brun: 0};
+    hand.forEach(card => {
+      colorCounts[getColor(card)]++;
+    });
+    const maxColorCount = Math.max(...Object.values(colorCounts));
+    
+    // Advanced bot bidding logic
+    const handStrength = evaluateHandStrength(hand);
+    const shouldBid = decideToBid(handStrength, state.highestBid, mustTake, maxColorCount);
+    
+    if (shouldBid && state.highestBid < 12) {
+      const bidValue = calculateBidValue(handStrength, state.highestBid);
+      
+      bidsPlaced.push(currentBidder);
+      const nextBidder = (currentBidder + 1) % 4;
+      
+      gameStateRef.update({
+        highestBid: bidValue,
+        highestBidder: currentBidder,
+        currentBidder: nextBidder,
+        bidsPlaced: bidsPlaced,
+        lastBidderPosition: currentBidder
+      });
+      
+      log(`${playerNames[currentBidder] || 'Bot'} prend à ${bidValue}!`);
+    } else {
+      passedPlayers.push(currentBidder);
+      bidsPlaced.push(currentBidder);
+      const nextBidder = (currentBidder + 1) % 4;
+      
+      gameStateRef.update({
+        passedPlayers: passedPlayers,
+        currentBidder: nextBidder,
+        bidsPlaced: bidsPlaced
+      });
+      
+      log(`${playerNames[currentBidder] || 'Bot'} passe.`);
+    }
+    
+    checkBiddingEnd();
+  });
+}
+
+function decideToBid(handStrength, currentBid, mustTake, maxColorCount) {
+  if (mustTake) return true; // Dealer must take if everyone passed
+  
+  // Must have at least 4 cards in one color to bid
+  if (maxColorCount < 4) {
+    return false; // Don't bid without 4+ cards in a color
+  }
+  
+  // Only bid if no one has bid yet (currentBid === 0)
+  // Or if we have an exceptionally strong hand
+  if (currentBid > 0) {
+    // Someone already bid - only overbid with exceptional hand
+    return handStrength >= 18 + (Math.random() * 2);
+  }
+  
+  // No one has bid yet - decide if we should take at 7
+  const threshold = 10; // Need decent hand to bid
+  const randomFactor = (Math.random() - 0.5) * 2;
+  
+  return (handStrength + randomFactor) >= threshold;
+}
+
+function evaluateHandStrength(hand) {
+  if (!hand || hand.length === 0) return 0;
+  
+  let strength = 0;
+  
+  // Count cards by color
+  const colorCounts = {Rouge: 0, Bleu: 0, Vert: 0, Brun: 0};
+  const colorValues = {Rouge: [], Bleu: [], Vert: [], Brun: []};
+  
+  hand.forEach(card => {
+    const color = getColor(card);
+    const value = getValue(card);
+    colorCounts[color]++;
+    colorValues[color].push(value);
+  });
+  
+  // Evaluate each color
+  Object.keys(colorCounts).forEach(color => {
+    const count = colorCounts[color];
+    const values = colorValues[color];
+    
+    // Special handling for Brown - generally bad to take in brown
+    if (color === 'Brun') {
+      const highBrownCards = values.filter(v => v >= 5).length;
+      
+      // Brown is only good if you have 5+ high cards AND the 0_Brun
+      if (count >= 5 && highBrownCards >= 5 && values.includes(0)) {
+        strength += 4; // Decent brown hand
+      } else if (count >= 3) {
+        strength -= 2; // Having many brown cards is generally bad
+        
+        // Extra penalty for high brown cards without 0_Brun
+        const highCardsWithout0 = values.filter(v => v >= 5 && v !== 0).length;
+        strength -= highCardsWithout0 * 1.5; // Raw high brown cards are dangerous
+      }
+      return; // Skip normal evaluation for brown
+    }
+    
+    // Special handling for Red with 0_Rouge
+    if (color === 'Rouge' && values.includes(0)) {
+      if (count >= 4) {
+        // Having 0_Rouge with 4+ red cards is REALLY good
+        strength += 6;
+        if (count >= 5) strength += 2; // Even better with more cards
+        if (count >= 6) strength += 2; // Exceptional
+      } else if (count >= 3) {
+        strength += 3; // Still good with 3 cards
+      }
+    }
+    
+    // Normal color evaluation
+    if (count >= 3) {
+      // Strong color (can control)
+      strength += 3;
+      
+      // Bonus for high cards
+      const highCards = values.filter(v => v >= 5).length;
+      strength += highCards * 1.5;
+      
+      // Special bonus for having 7 in a strong color
+      if (values.includes(7)) strength += 2;
+    } else if (count === 2) {
+      // Medium color
+      strength += 1;
+      const avgValue = values.reduce((a, b) => a + b, 0) / values.length;
+      if (avgValue >= 5) strength += 1;
+    } else if (count === 1) {
+      // Singleton - good for cutting
+      const value = values[0];
+      if (value >= 6) strength += 1; // High singleton
+      else strength += 0.5; // Can discard bad cards
+    }
+  });
+  
+  // Special cards evaluation
+  if (hand.includes('0_Brun')) strength += 3; // Good - want to lose it
+  if (hand.includes('0_Rouge') && colorCounts['Rouge'] < 3) {
+    // 0_Rouge without enough red cards is bad
+    strength -= 3;
+  }
+  if (hand.includes('7_Brun')) strength += 2; // Can win 0_Brun with it
+  
+  // Bonus for having many high cards overall (except brown)
+  const highCardsNotBrown = hand.filter(c => getValue(c) >= 6 && getColor(c) !== 'Brun').length;
+  strength += highCardsNotBrown * 0.5;
+  
+  return strength;
+}
+
+function calculateBidValue(handStrength, currentBid) {
+  const minBid = currentBid > 0 ? currentBid + 1 : 7;
+  
+  // Bots should almost always bid 7 or 8
+  let suggestedBid = 7;
+  
+  if (currentBid === 0) {
+    // First bid - take at 7 with good hand, 8 with really good hand
+    if (handStrength >= 16) {
+      suggestedBid = 8;
+    } else {
+      suggestedBid = 7;
+    }
+  } else {
+    // Someone already bid - if we're bidding, we have exceptional hand
+    // Still keep it reasonable (7 or 8)
+    suggestedBid = Math.min(minBid, 8);
+  }
+  
+  return suggestedBid;
+}
+
+function chooseAdvancedCard(botIndex, hand, cardsPlayed, state) {
+  const demandedColor = state.demandedColor || getColor(cardsPlayed[0].card);
+  const trumpColor = state.trumpColor;
+  const hasColor = hand.filter(card => getColor(card) === demandedColor);
+  
+  // Analyze the trick
+  const trickAnalysis = analyzeTrick(cardsPlayed, demandedColor, trumpColor, botIndex);
+  
+  // Strategy 1: Handle 0_Rouge (red special - bad to win)
+  if (trickAnalysis.hasRedSpecial) {
+    return avoidWinningTrick(hand, hasColor, demandedColor, trickAnalysis);
+  }
+  
+  // Strategy 2: Handle 0_Brun (brown special - good to win)
+  if (trickAnalysis.hasBrownSpecial) {
+    return tryWinningTrick(hand, hasColor, demandedColor, trickAnalysis, trumpColor);
+  }
+  
+  // Strategy 3: Normal play - consider if winning or losing is better
+  const myTeam = (botIndex === 0 || botIndex === 2) ? 1 : 2;
+  const currentWinnerTeam = (trickAnalysis.currentWinner === 0 || trickAnalysis.currentWinner === 2) ? 1 : 2;
+  
+  if (cardsPlayed.length === 3) {
+    // Last to play - have full information
+    if (currentWinnerTeam === myTeam) {
+      // Teammate winning - play lowest card possible
+      return playLowestPossibleCard(hand, hasColor, demandedColor);
+    } else {
+      // Opponent winning - try to overtake if reasonable
+      if (trickAnalysis.trickValue >= 2 || cardsPlayed.length <= 2) {
+        return tryWinningTrick(hand, hasColor, demandedColor, trickAnalysis, trumpColor);
+      } else {
+        return playLowestPossibleCard(hand, hasColor, demandedColor);
+      }
+    }
+  } else {
+    // Not last to play - play more conservatively
+    if (hasColor.length > 0) {
+      // Follow suit
+      const sortedByValue = [...hasColor].sort((a, b) => getValue(a) - getValue(b));
+      
+      if (trickAnalysis.currentWinner === botIndex - 1 && currentWinnerTeam === myTeam) {
+        // Partner just played, play low
+        return sortedByValue[0];
+      } else if (getValue(trickAnalysis.highestCard) <= 4) {
+        // Low trick, play medium card
+        const midIndex = Math.floor(sortedByValue.length / 2);
+        return sortedByValue[midIndex];
+      } else {
+        // High trick, play high if we can win, otherwise low
+        const canWin = sortedByValue.some(c => getValue(c) > getValue(trickAnalysis.highestCard));
+        if (canWin) {
+          const winningCards = sortedByValue.filter(c => getValue(c) > getValue(trickAnalysis.highestCard));
+          return winningCards[0]; // Lowest winning card
+        } else {
+          return sortedByValue[0]; // Lowest card
+        }
+      }
+    } else {
+      // Can't follow suit - strategic discard
+      return strategicDiscard(hand, botIndex, state);
+    }
+  }
+}
+
+function analyzeTrick(cardsPlayed, demandedColor, trumpColor, myPosition) {
+  let hasRedSpecial = false;
+  let hasBrownSpecial = false;
+  let trickValue = 1; // Base value for winning
+  let currentWinner = cardsPlayed[0].player;
+  let highestCard = cardsPlayed[0].card;
+  let highestValue = getValue(highestCard);
+  
+  cardsPlayed.forEach(pc => {
+    if (pc.card === '0_Rouge') {
+      hasRedSpecial = true;
+      trickValue += 5;
+    }
+    if (pc.card === '0_Brun') {
+      hasBrownSpecial = true;
+      trickValue -= 3;
+    }
+    
+    // Determine current winner
+    const cardColor = getColor(pc.card);
+    const cardValue = getValue(pc.card);
+    const highestColor = getColor(highestCard);
+    
+    const cardIsTrump = cardColor === trumpColor;
+    const highestIsTrump = highestColor === trumpColor;
+    
+    if (cardIsTrump && !highestIsTrump) {
+      currentWinner = pc.player;
+      highestCard = pc.card;
+      highestValue = cardValue;
+    } else if (cardColor === highestColor && cardValue > highestValue) {
+      currentWinner = pc.player;
+      highestCard = pc.card;
+      highestValue = cardValue;
+    }
+  });
+  
+  return {
+    hasRedSpecial,
+    hasBrownSpecial,
+    trickValue,
+    currentWinner,
+    highestCard,
+    highestValue
+  };
+}
+
+function avoidWinningTrick(hand, hasColor, demandedColor, trickAnalysis) {
+  if (hasColor.length > 0) {
+    // Play lowest card in color
+    const sorted = [...hasColor].sort((a, b) => getValue(a) - getValue(b));
+    const lowestSafe = sorted.find(c => getValue(c) < trickAnalysis.highestValue);
+    return lowestSafe || sorted[0];
+  } else {
+    // Discard something useless, avoid 0_Brun
+    const safeDiscards = hand.filter(c => c !== '0_Brun' && getValue(c) <= 3);
+    if (safeDiscards.length > 0) {
+      return safeDiscards[0];
+    }
+    const notBrown = hand.filter(c => c !== '0_Brun');
+    return notBrown[0] || hand[0];
+  }
+}
+
+function tryWinningTrick(hand, hasColor, demandedColor, trickAnalysis, trumpColor) {
+  if (hasColor.length > 0) {
+    // Try to win with demanded color
+    const sorted = [...hasColor].sort((a, b) => getValue(b) - getValue(a));
+    const canWin = sorted.find(c => getValue(c) > trickAnalysis.highestValue);
+    if (canWin) return canWin;
+    
+    // Can't win, play highest to make it harder for next player
+    return sorted[0];
+  } else {
+    // Try to cut with trump
+    const trumpCards = hand.filter(c => getColor(c) === trumpColor);
+    if (trumpCards.length > 0) {
+      trumpCards.sort((a, b) => getValue(b) - getValue(a));
+      return trumpCards[0]; // Highest trump
+    }
+    
+    // Can't win - discard high useless card
+    return strategicDiscard(hand, -1, {});
+  }
+}
+
+function playLowestPossibleCard(hand, hasColor, demandedColor) {
+  if (hasColor.length > 0) {
+    const sorted = [...hasColor].sort((a, b) => getValue(a) - getValue(b));
+    return sorted[0];
+  } else {
+    // Discard lowest card overall
+    const sorted = [...hand].sort((a, b) => getValue(a) - getValue(b));
+    // Avoid discarding 0_Brun if possible
+    const notBrown = sorted.filter(c => c !== '0_Brun');
+    return notBrown[0] || sorted[0];
+  }
+}
+
+function strategicDiscard(hand, botIndex, state) {
+  const trumpColor = state.trumpColor;
+  const playedCards = state.playedCards || [];
+  
+  // Check if 0_Brun has been played this round
+  const allPlayedCardsThisGame = getAllPlayedCards(state);
+  const brunZeroPlayed = allPlayedCardsThisGame.includes('0_Brun');
+  
+  // Analyze current trick to see if teammate is winning
+  const myTeam = (botIndex === 0 || botIndex === 2) ? 1 : 2;
+  let teammateIsWinning = false;
+  
+  if (playedCards.length > 0) {
+    const trickAnalysis = analyzeTrick(playedCards, state.demandedColor, trumpColor, botIndex);
+    const currentWinnerTeam = (trickAnalysis.currentWinner === 0 || trickAnalysis.currentWinner === 2) ? 1 : 2;
+    
+    // Check if teammate is currently winning and likely to hold
+    if (currentWinnerTeam === myTeam) {
+      // Check if it's secure (high card or trump)
+      const winningCard = playedCards.find(pc => pc.player === trickAnalysis.currentWinner).card;
+      const winningValue = getValue(winningCard);
+      const winningColor = getColor(winningCard);
+      
+      // Winning is secure if it's a trump or a high card (6+)
+      teammateIsWinning = (winningColor === trumpColor || winningValue >= 6);
+    }
+  }
+  
+  // Separate cards by priority for discarding
+  const trumpCards = hand.filter(c => getColor(c) === trumpColor);
+  const brownCards = hand.filter(c => getColor(c) === 'Brun');
+  const otherCards = hand.filter(c => getColor(c) !== trumpColor && getColor(c) !== 'Brun');
+  
+  // Never discard trump or brown cards (except high brown if 0_Brun hasn't been played)
+  let discardPool = [...otherCards];
+  
+  // Add high brown cards to discard pool if 0_Brun hasn't been played yet
+  if (!brunZeroPlayed) {
+    const highBrownCards = brownCards.filter(c => getValue(c) >= 5 && c !== '0_Brun');
+    discardPool.push(...highBrownCards);
+  }
+  
+  if (discardPool.length > 0) {
+    // Sort by value (lowest first)
+    discardPool.sort((a, b) => getValue(a) - getValue(b));
+    
+    // If teammate is winning securely, we CAN dump 0_Rouge safely
+    if (teammateIsWinning && hand.includes('0_Rouge')) {
+      return '0_Rouge'; // Safe to dump it!
+    }
+    
+    // Otherwise, avoid discarding 0_Rouge if possible
+    const notRedZero = discardPool.filter(c => c !== '0_Rouge');
+    if (notRedZero.length > 0) {
+      return notRedZero[0]; // Lowest non-0_Rouge card
+    }
+    
+    return discardPool[0]; // Lowest card
+  }
+  
+  // If we only have trump and/or brown cards left
+  // Discard lowest brown card (except 0_Brun)
+  const brownNotZero = brownCards.filter(c => c !== '0_Brun');
+  if (brownNotZero.length > 0) {
+    brownNotZero.sort((a, b) => getValue(a) - getValue(b));
+    return brownNotZero[0];
+  }
+  
+  // Last resort: discard lowest trump
+  if (trumpCards.length > 0) {
+    trumpCards.sort((a, b) => getValue(a) - getValue(b));
+    return trumpCards[0];
+  }
+  
+  // Absolute last resort
+  return hand[0];
+}
+
+// Helper function to get all cards played in the current round
+function getAllPlayedCards(state) {
+  const allPlayed = [];
+  
+  // Check what cards are missing from hands
+  const allCards = [];
+  for (let suit of ['Bleu', 'Brun', 'Rouge', 'Vert']) {
+    for (let val of [0, 1, 2, 3, 4, 5, 6, 7]) {
+      allCards.push(`${val}_${suit}`);
+    }
+  }
+  
+  const handsCards = new Set();
+  if (state.hands) {
+    Object.values(state.hands).forEach(hand => {
+      if (hand) {
+        hand.forEach(card => handsCards.add(card));
+      }
+    });
+  }
+  
+  // Cards currently on table
+  if (state.playedCards) {
+    state.playedCards.forEach(pc => handsCards.add(pc.card));
+  }
+  
+  // Cards that have been played are those not in hands or on table
+  allCards.forEach(card => {
+    if (!handsCards.has(card)) {
+      allPlayed.push(card);
+    }
+  });
+  
+  return allPlayed;
+}
+
+    function endBidding(winner, bid) {
+      if (!isHost) return;
+
+      const takerTeam = (winner === 0 || winner === 2) ? 1 : 2;
+      
+      gameStateRef.update({
+        biddingPhase: false,
+        highestBidder: winner,
+        highestBid: bid,
+        takerTeam: takerTeam,
+        currentTurn: winner,
+        currentLeader: winner
+      }).then(() => {
+        log(`${playerNames[winner] || 'Joueur ' + (winner + 1)} prend avec ${bid} points!`);
+        
+        // If winner is a bot, trigger bot play
+        setTimeout(() => {
+          gameStateRef.once('value').then(snap => {
+            const state = snap.val();
+            if (state.botPlayers && state.botPlayers[winner] === true) {
+              botPlay();
+            }
+          });
+        }, 1000);
+      });
+    }
+
+    function getPositionForPlayer(playerNum) {
+      // Calculate relative position from myPlayerNumber
+      // Bottom(me) -> Right(+1) -> Top(+2) -> Left(+3)
+      const relativePos = (playerNum - myPlayerNumber + 4) % 4;
+      
+      switch(relativePos) {
+        case 0: return 'bottom';
+        case 1: return 'right';
+        case 2: return 'top';
+        case 3: return 'left';
+      }
+    }
+
+    function renderHands(state) {
+      const positions = ['bottom', 'right', 'top', 'left'];
+      
+      positions.forEach(pos => {
+        const el = document.getElementById(`player-${pos}`);
+        el.innerHTML = '';
+      });
+
+      // Safety check: make sure hands exist and are complete
+      if (!state.hands || typeof state.hands !== 'object') {
+        console.warn("Hands not ready yet, skipping render");
+        return;
+      }
+
+      // Render each player's hand in the correct position
+      for (let playerNum = 0; playerNum < 4; playerNum++) {
+        const position = getPositionForPlayer(playerNum);
+        const el = document.getElementById(`player-${position}`);
+        const hand = state.hands[playerNum];
+        
+        // Safety check: make sure this player's hand exists
+        if (!hand || !Array.isArray(hand)) {
+          console.warn(`Hand for player ${playerNum} not ready yet`);
+          continue;
+        }
+        
+        let displayHand = hand;
+        
+        // Sort my hand
+        if (playerNum === myPlayerNumber) {
+          const order = ['Bleu', 'Brun', 'Rouge', 'Vert'];
+          displayHand = [...hand].sort((a, b) => {
+            const colorA = getColor(a);
+            const colorB = getColor(b);
+            const valueA = getValue(a);
+            const valueB = getValue(b);
+            
+            if (colorA === colorB) return valueA - valueB;
+            return order.indexOf(colorA) - order.indexOf(colorB);
+          });
+        }
+
+        const totalCards = displayHand.length;
+
+        for (let i = 0; i < displayHand.length; i++) {
+          const card = displayHand[i];
+          const img = document.createElement('img');
+          
+          // Show card face only for my hand
+          if (playerNum === myPlayerNumber) {
+            img.src = `${card}.png`;
+            img.onclick = () => playCard(card);
+          } else {
+            img.src = `back.png`;
+          }
+          
+          img.className = 'card';
+          el.appendChild(img);
+        }
+      }
+    }
+
+    function playCard(card) {
+      gameStateRef.once('value').then(snapshot => {
+        const state = snapshot.val();
+        
+        // Check if it's my turn
+        if (state.currentTurn !== myPlayerNumber) {
+          log("Ce n'est pas votre tour!");
+          return;
+        }
+
+        // Check if bidding is still active
+        if (state.biddingPhase) {
+          log("La phase d'enchères est en cours");
+          return;
+        }
+
+        if (state.playedCards) {
+          if (state.playedCards.length >= 4) {
+            log("Attendez la prochaine manche!");
+            return;
+          }
+        }
+
+        const hand = state.hands[myPlayerNumber];
+        if (!hand.includes(card)) return;
+
+        // Validate card play
+        const playedCards = state.playedCards || [];
+        
+        if (playedCards.length === 0) {
+          // First card sets trump color
+          const trumpColor = getColor(card);
+          animateCardPlay(card, () => {
+            playCardToFirebase(card, state, trumpColor);
+          });
+        } else {
+          // Must follow suit if possible
+          const demandedColor = state.demandedColor || getColor(playedCards[0].card);
+          const cardColor = getColor(card);
+          
+          if (cardColor === demandedColor) {
+            animateCardPlay(card, () => {
+              playCardToFirebase(card, state);
+            });
+          } else if (hasColor(hand, demandedColor)) {
+            log("Vous devez suivre la couleur!");
+            return;
+          } else {
+            animateCardPlay(card, () => {
+              playCardToFirebase(card, state);
+            });
+          }
+        }
+      });
+    }
+
+    function animateCardPlay(card, callback) {
+      // Find the card image element
+      const position = getPositionForPlayer(myPlayerNumber);
+      const handEl = document.getElementById(`player-${position}`);
+      const cardImgs = handEl.querySelectorAll('img');
+      
+      let cardEl = null;
+      for (let img of cardImgs) {
+        if (img.src.includes(card)) {
+          cardEl = img;
+          break;
+        }
+      }
+      
+      if (cardEl) {
+        cardEl.classList.add('playing');
+        
+        // Wait for animation to complete before sending to Firebase
+        setTimeout(() => {
+          callback();
+        }, 500);
+      } else {
+        callback();
+      }
+    }
+
+    function playCardToFirebase(card, state, trumpColor = null) {
+      const newHand = state.hands[myPlayerNumber].filter(c => c !== card);
+      const newPlayedCards = state.playedCards || [];
+      
+      newPlayedCards.push({
+        player: myPlayerNumber,
+        card: card
+      });
+
+      const updates = {
+        [`hands/${myPlayerNumber}`]: newHand,
+        playedCards: newPlayedCards,
+        currentTurn: (state.currentTurn + 1) % 4
+      };
+
+      // Set trump color ONLY if this is the very first card of the round
+      if (trumpColor && !state.trumpColor) {
+        updates.trumpColor = trumpColor;
+        updates.demandedColor = trumpColor;
+        console.log(`🎴 Trump color set to: ${trumpColor}`);
+      } else if (newPlayedCards.length === 1) {
+        // First card of a trick (not the round), set demanded color
+        updates.demandedColor = getColor(card);
+      }
+
+      gameStateRef.update(updates);
+
+      // Check if trick is complete
+      if (newPlayedCards.length === 4) {
+        setTimeout(() => {
+          processTrickEnd();
+        }, 1500);
+      } else {
+        // Bot turn
+        if (isHost) {
+          setTimeout(() => {
+            botPlay();
+          }, 800);
+        }
+      }
+    }
+
+    function botPlay() {
+      gameStateRef.once('value').then(snapshot => {
+        const state = snapshot.val();
+        const currentPlayer = state.currentTurn;
+        
+        // Check if it's a bot using botPlayers (numeric keys)
+        if (!state.botPlayers || state.botPlayers[currentPlayer] !== true) {
+          return; // Wait for real player
+        }
+
+        // Bot logic
+        const hand = state.hands[currentPlayer];
+        if (!hand || hand.length === 0) return;
+
+        const playedCards = state.playedCards || [];
+        let cardToPlay;
+
+        if (playedCards.length === 0) {
+          // First to play
+          const safe = hand.filter(c => c !== "0_Rouge" && c !== "0_Brun");
+          if (safe.length > 0) {
+            safe.sort((a, b) => getValue(a) - getValue(b));
+            cardToPlay = safe[Math.floor(safe.length / 2)];
+          } else {
+            cardToPlay = hand[Math.floor(Math.random() * hand.length)];
+          }
+          
+          // Set trump color
+          const trumpColor = getColor(cardToPlay);
+          playBotCard(currentPlayer, cardToPlay, state, trumpColor);
+        } else {
+          cardToPlay = chooseAdvancedCard(currentPlayer, hand, playedCards, state);
+          playBotCard(currentPlayer, cardToPlay, state);
+        }
+      });
+    }
+
+    function playBotCard(playerNum, card, state, trumpColor = null) {
+      const newHand = state.hands[playerNum].filter(c => c !== card);
+      const newPlayedCards = state.playedCards || [];
+      
+      newPlayedCards.push({
+        player: playerNum,
+        card: card
+      });
+
+      const updates = {
+        [`hands/${playerNum}`]: newHand,
+        playedCards: newPlayedCards,
+        currentTurn: (state.currentTurn + 1) % 4
+      };
+
+      // Set trump color ONLY if this is the very first card of the round
+      if (trumpColor && !state.trumpColor) {
+        updates.trumpColor = trumpColor;
+        updates.demandedColor = trumpColor;
+        console.log(`🎴 Bot set trump color to: ${trumpColor}`);
+      } else if (newPlayedCards.length === 1) {
+        // First card of a trick (not the round), set demanded color
+        updates.demandedColor = getColor(card);
+      }
+
+      gameStateRef.update(updates);
+
+      if (newPlayedCards.length === 4) {
+        setTimeout(() => {
+          processTrickEnd();
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          botPlay();
+        }, 800);
+      }
+    }
+
+    function processTrickEnd() {
+      gameStateRef.once('value').then(snapshot => {
+        const state = snapshot.val();
+        const playedCards = state.playedCards || [];
+        
+        if (playedCards.length !== 4) return;
+
+        const winner = getWinner(playedCards, state.trumpColor);
+        
+        // Add confetti and sparkles for winner
+        createConfetti();
+        createSparkles(winner);
+        
+        let team1Points = 0;
+        let team2Points = 0;
+        
+        // Winner gets 1 point
+        if (winner === 0 || winner === 2) {
+          team1Points = 1;
+        } else {
+          team2Points = 1;
+        }
+
+        // Check for special cards
+        playedCards.forEach(pc => {
+          if (pc.card === '0_Rouge') {
+            if (winner === 0 || winner === 2) {
+              team1Points += 5;
+            } else {
+              team2Points += 5;
+            }
+          }
+          if (pc.card === '0_Brun') {
+            if (winner === 0 || winner === 2) {
+              team1Points -= 3;
+            } else {
+              team2Points -= 3;
+            }
+          }
+        });
+
+        const newTeam1Score = state.teamOneScore + team1Points;
+        const newTeam2Score = state.teamTwoScore + team2Points;
+
+        // Check if round is over
+        
+        if (!state.hands) {
+          console.log("Round is over! Checking if taker made their bid...");
+          
+          // Check if taker made their bid
+          const takerTeam = state.takerTeam;
+          const takerBid = state.highestBid;
+          
+          let finalTeam1Score = newTeam1Score;
+          let finalTeam2Score = newTeam2Score;
+          
+          if (takerTeam === 1) {
+            if (newTeam1Score < takerBid) {
+              finalTeam1Score = originalTeamOneScore - takerBid;
+              finalTeam2Score = newTeam2Score; // Keep their points
+              log(`L'équipe 1 n'a pas fait son contrat! -${takerBid} points`);
+            } else {
+              log(`L'équipe 1 a réussi son contrat!`);
+            }
+          } else if (takerTeam === 2) {
+            if (newTeam2Score < takerBid) {
+              finalTeam2Score = originalTeamTwoScore - takerBid;
+              finalTeam1Score = newTeam1Score; // Keep their points
+              log(`L'équipe 2 n'a pas fait son contrat! -${takerBid} points`);
+            } else {
+              log(`L'équipe 2 a réussi son contrat!`);
+            }
+          }
+
+          // Wait 3 seconds before clearing cards and starting next round
+          setTimeout(() => {
+            gameStateRef.update({
+              playedCards: [],
+              currentLeader: winner,
+              currentTurn: winner,
+              demandedColor: "",
+              teamOneScore: finalTeam1Score,
+              teamTwoScore: finalTeam2Score,
+              waitingForNextRound: true
+            }).then(() => {
+              console.log("Round end state updated, waitingForNextRound = true");
+            });
+          }, 3000); // Show final trick for 3 seconds
+        } else {
+          // Not end of round, just end of trick - wait before clearing
+          setTimeout(() => {
+            gameStateRef.update({
+              playedCards: [],
+              currentLeader: winner,
+              currentTurn: winner,
+              demandedColor: "",
+              teamOneScore: newTeam1Score,
+              teamTwoScore: newTeam2Score
+            }).then(() => {
+              console.log("Trick cleared, continuing play");
+              
+              // Continue play
+              setTimeout(() => {
+                botPlay();
+              }, 500);
+            });
+          }, 2000); // Show trick for 2 seconds
+        }
+      });
+    }
+
+    function startNextRound() {
+      if (!isHost) return;
+
+      gameStateRef.once('value').then(snapshot => {
+        const state = snapshot.val();
+        originalTeamOneScore = state.teamOneScore;
+        originalTeamTwoScore = state.teamTwoScore;
+        
+        console.log("Starting next round. Current scores - Team1:", state.teamOneScore, "Team2:", state.teamTwoScore);
+        
+        // Check for game end
+        if (state.teamOneScore >= 41) {
+          log("🏆 L'équipe 1 gagne la partie!");
+          return; // Game is over
+        } else if (state.teamTwoScore >= 41) {
+          log("🏆 L'équipe 2 gagne la partie!");
+          return; // Game is over
+        }
+
+        // Shuffle and deal new cards
+        const suits = ['Bleu', 'Brun', 'Rouge', 'Vert'];
+        const values = [0, 1, 2, 3, 4, 5, 6, 7];
+        let deck = [];
+        
+        for (let suit of suits) {
+          for (let val of values) {
+            deck.push(`${val}_${suit}`);
+          }
+        }
+        
+        deck.sort(() => Math.random() - 0.5);
+        
+        const hands = {0: [], 1: [], 2: [], 3: []};
+        for (let i = 0; i < deck.length; i++) {
+          hands[i % 4].push(deck[i]);
+        }
+
+        const newDealer = (state.dealerIndex + 1) % 4;
+        const firstBidder = (newDealer + 1) % 4;
+
+        // Preserve botPlayers and playerNames
+        const botPlayers = state.botPlayers || {0: true, 1: true, 2: true, 3: true};
+        const playerNamesFromState = state.playerNames || {};
+
+        console.log("Dealing new round. New dealer:", newDealer, "First bidder:", firstBidder);
+
+        // Use .set() to update everything atomically
+        gameStateRef.set({
+          hands: hands,
+          currentTurn: firstBidder,
+          playedCards: [],
+          trumpColor: "",
+          demandedColor: "",
+          currentLeader: firstBidder,
+          teamOneScore: state.teamOneScore,
+          teamTwoScore: state.teamTwoScore,
+          dealerIndex: newDealer,
+          roundNumber: (state.roundNumber || 0) + 1,
+          biddingPhase: true,
+          currentBidder: firstBidder,
+          highestBid: 0,
+          highestBidder: -1,
+          passedPlayers: [],
+          bidsPlaced: [],
+          takerTeam: -1,
+          botPlayers: botPlayers,
+          playerNames: playerNamesFromState,
+          waitingForNextRound: false
+        }).then(() => {
+          console.log("New round started successfully!");
+        });
+      });
+    }
+
+    function getWinner(playedCards, trumpColor) {
+      const leadColor = getColor(playedCards[0].card);
+      let best = playedCards[0];
+
+      for (let i = 1; i < playedCards.length; i++) {
+        const current = playedCards[i];
+        const currentColor = getColor(current.card);
+        const bestColor = getColor(best.card);
+
+        const currentIsTrump = currentColor === trumpColor;
+        const bestIsTrump = bestColor === trumpColor;
+
+        if (currentIsTrump && !bestIsTrump) {
+          best = current;
+        } else if (
+          currentColor === bestColor &&
+          getValue(current.card) > getValue(best.card)
+        ) {
+          best = current;
+        } else if (!bestIsTrump && currentColor === leadColor && bestColor !== leadColor) {
+          best = current;
+        }
+      }
+
+      return best.player;
+    }
+
+    function hasColor(hand, color) {
+      return hand.some(card => getColor(card) === color);
+    }
+
+    function getColor(cardName) {
+      return cardName.split('_')[1];
+    }
+
+    function getValue(cardName) {
+      return parseInt(cardName.split('_')[0]);
+    }
+
+    function updateCenter(state) {
+      const div = document.getElementById('center-play');
+      const playedCards = state.playedCards || [];
+      const winner = playedCards.length === 4 ? getWinner(playedCards, state.trumpColor) : null;
+
+      // If playedCards is empty, clear the center
+      if (playedCards.length === 0) {
+        div.innerHTML = '';
+        return;
+      }
+
+      // Get current cards in center
+      const currentCards = Array.from(div.querySelectorAll('img')).map(img => {
+        const match = img.src.match(/(\d+_\w+)\.png/);
+        return match ? match[1] : null;
+      }).filter(Boolean);
+
+      // Find new cards that need to be added
+      const newCards = playedCards.filter(pc => !currentCards.includes(pc.card));
+
+      // Add new cards with animation
+      for (let pc of newCards) {
+        const img = document.createElement('img');
+        img.src = `${pc.card}.png`;
+        img.className = 'card appearing';
+
+        if (pc.card === '0_Rouge') {
+          img.classList.add('special-red');
+        } else if (pc.card === '0_Brun') {
+          img.classList.add('special-brown');
+        }
+
+        // Highlight teammate's card
+        const myTeam = (myPlayerNumber === 0 || myPlayerNumber === 2) ? 1 : 2;
+        const cardTeam = (pc.player === 0 || pc.player === 2) ? 1 : 2;
+        if (cardTeam === myTeam && pc.player !== myPlayerNumber) {
+          img.classList.add('teamate-card');
+        }
+
+        if (pc.player === winner) {
+          img.classList.add('winner');
+        }
+
+        div.appendChild(img);
+      }
+
+      // If all existing cards are still valid, just update winner status
+      if (newCards.length === 0) {
+        const imgs = div.querySelectorAll('img');
+        imgs.forEach((img, idx) => {
+          if (playedCards[idx]) {
+            if (playedCards[idx].player === winner) {
+              img.classList.add('winner');
+            } else {
+              img.classList.remove('winner');
+            }
+          }
+        });
+      }
+    }
+
+    function createSmoke(cardElement, type) {
+      const rect = cardElement.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Create multiple smoke puffs for better effect
+      for (let i = 0; i < 4; i++) {
+        const smoke = document.createElement('div');
+        smoke.className = `smoke ${type}-smoke`;
+        smoke.style.left = centerX + (Math.random() - 0.5) * 40 + 'px';
+        smoke.style.top = centerY + (Math.random() - 0.5) * 40 + 'px';
+        smoke.style.animationDelay = (i * 0.15) + 's';
+        smoke.style.animationDuration = (1.5 + Math.random() * 0.5) + 's';
+        document.body.appendChild(smoke);
+        
+        setTimeout(() => smoke.remove(), 2500);
+      }
+    }
+
+    function updateScore(state) {
+      const scoreTitle = document.getElementById('scoreTitle');
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const newText = `Team 1: ${state.teamOneScore} | Team 2: ${state.teamTwoScore}`;
+      
+      // Animate if score changed
+      if (scoreTitle.textContent !== newText) {
+        scoreDisplay.classList.add('score-changed');
+        setTimeout(() => {
+          scoreDisplay.classList.remove('score-changed');
+        }, 500);
+      }
+      
+      scoreTitle.textContent = newText;
+    }
+
+    function updateTurnIndicator(state) {
+      // Remove active-turn class from all hands
+      document.querySelectorAll('.player.hand').forEach(hand => {
+        hand.classList.remove('active-turn');
+      });
+
+      // Add active-turn to current player
+      if (!state.biddingPhase) {
+        const currentPlayerPosition = getPositionForPlayer(state.currentTurn);
+        const currentPlayerHand = document.getElementById(`player-${currentPlayerPosition}`);
+        if (currentPlayerHand) {
+          currentPlayerHand.classList.add('active-turn');
+        }
+      } else if (state.currentBidder >= 0) {
+        const currentBidderPosition = getPositionForPlayer(state.currentBidder);
+        const currentBidderHand = document.getElementById(`player-${currentBidderPosition}`);
+        if (currentBidderHand) {
+          currentBidderHand.classList.add('active-turn');
+        }
+      }
+    }
+
+    function updateTrumpIndicator(state) {
+      const indicator = document.getElementById('trump-indicator');
+      const trumpText = document.getElementById('trump-text');
+      
+      if (state.trumpColor) {
+        trumpText.textContent = state.trumpColor;
+        indicator.className = state.trumpColor;
+        indicator.style.display = 'block';
+      } else {
+        indicator.style.display = 'none';
+      }
+    }
+
+    function createConfetti() {
+      const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f7b731'];
+      const center = document.getElementById('center');
+      
+      for (let i = 0; i < 30; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = (Math.random() * 100) + '%';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = (Math.random() * 0.3) + 's';
+        confetti.style.animationDuration = (Math.random() * 1 + 1.5) + 's';
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 2500);
+      }
+    }
+
+    function createSparkles(winnerPosition) {
+      const position = getPositionForPlayer(winnerPosition);
+      const centerPlay = document.getElementById('center-play');
+      const cards = centerPlay.querySelectorAll('.card.winner');
+      
+      cards.forEach(card => {
+        for (let i = 0; i < 5; i++) {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle';
+          const rect = card.getBoundingClientRect();
+          sparkle.style.left = (rect.left + Math.random() * rect.width) + 'px';
+          sparkle.style.top = (rect.top + Math.random() * rect.height) + 'px';
+          sparkle.style.animationDelay = (Math.random() * 0.5) + 's';
+          document.body.appendChild(sparkle);
+          
+          setTimeout(() => sparkle.remove(), 1500);
+        }
+      });
+    }
+
+    function updatePlayerLabels() {
+      console.log("Updating player labels with playerNames:", playerNames);
+      
+      for (let i = 0; i < 4; i++) {
+        const position = getPositionForPlayer(i);
+        const label = document.getElementById(`label-${position}`);
+        
+        if (!label) {
+          console.error(`Label not found for position: ${position}`);
+          continue;
+        }
+        
+        if (i === myPlayerNumber) {
+          label.textContent = `Vous (${username})`;
+          console.log(`Set my label (${position}): Vous (${username})`);
+        } else {
+          const playerName = playerNames[i];
+          if (playerName) {
+            label.textContent = playerName;
+            console.log(`Set label (${position}) for player ${i}: ${playerName}`);
+          } else {
+            label.textContent = `Bot ${i + 1}`;
+            console.log(`No name for player ${i}, set to: Bot ${i + 1}`);
+          }
+        }
+      }
+    }
+
+    function updateLog(state) {
+      // Update game log based on state
+      if (state.biddingPhase) {
+        if (state.currentBidder === myPlayerNumber) {
+          log("À vous d'enchérir!");
+        } else {
+          const bidderName = playerNames[state.currentBidder] || `Joueur ${state.currentBidder + 1}`;
+          log(`${bidderName} réfléchit...`);
+        }
+      } else if (state.currentTurn === myPlayerNumber) {
+        log("À vous de jouer!");
+      } else {
+        const playerName = playerNames[state.currentTurn] || `Joueur ${state.currentTurn + 1}`;
+        log(`${playerName} joue...`);
+      }
+
+      if (state.trumpColor) {
+        log(`Atout: ${state.trumpColor}`);
+      }
+    }
+
+    function log(text) {
+      const logEl = document.getElementById('log');
+      logEl.textContent = text;
+    }
+
+    function showGameEndScreen(winningTeam, team1Score, team2Score) {
+      const endScreen = document.getElementById('gameEndScreen');
+      const winnerTeamName = document.getElementById('winnerTeamName');
+      const finalScore = document.getElementById('finalScore');
+      const xpGained = document.getElementById('xpGained');
+      const hostOnlyMessage = document.getElementById('hostOnlyMessage');
+      const restartBtn = document.getElementById('restartGameBtn');
+      
+      // Determine if player won
+      const myTeam = (myPlayerNumber === 0 || myPlayerNumber === 2) ? 1 : 2;
+      const didIWin = myTeam === winningTeam;
+      
+      // Calculate XP (more for winning)
+      const xpAmount = didIWin ? 100 : 50;
+      
+      winnerTeamName.textContent = `Équipe ${winningTeam}`;
+      finalScore.textContent = `Team 1: ${team1Score} | Team 2: ${team2Score}`;
+      xpGained.textContent = didIWin ? `🎉 +${xpAmount} XP Gagné! 🎉` : `+${xpAmount} XP`;
+      
+      // Show/hide restart button based on host status
+      if (!isHost) {
+        restartBtn.style.display = 'none';
+        hostOnlyMessage.style.display = 'block';
+      }
+      
+      endScreen.classList.add('show');
+      
+      // Create fireworks
+      if (didIWin) {
+        createFireworks();
+      }
+      
+      // Award XP to logged-in user
+      awardXP(xpAmount, didIWin);
+    }
+
+    function createFireworks() {
+      const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700'];
+      
+      for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight * 0.5;
+          
+          for (let j = 0; j < 20; j++) {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = x + 'px';
+            firework.style.top = y + 'px';
+            firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+            
+            const angle = (Math.PI * 2 * j) / 20;
+            const distance = 100 + Math.random() * 100;
+            firework.style.setProperty('--x', Math.cos(angle) * distance + 'px');
+            firework.style.setProperty('--y', Math.sin(angle) * distance + 'px');
+            
+            document.body.appendChild(firework);
+            
+            setTimeout(() => firework.remove(), 1000);
+          }
+        }, i * 100);
+      }
+    }
+
+    async function awardXP(amount, won) {
+      // Check if user is logged in with Netlify Identity
+      const user = netlifyIdentity.currentUser();
+      
+      if (!user) {
+        console.log("User not logged in, XP not saved");
+        return;
+      }
+      
+      try {
+        // Get current XP from user metadata
+        const currentXP = user.user_metadata?.joffre_xp || 0;
+        const currentWins = user.user_metadata?.joffre_wins || 0;
+        const currentGames = user.user_metadata?.joffre_games || 0;
+        
+        const newXP = currentXP + amount;
+        const newWins = won ? currentWins + 1 : currentWins;
+        const newGames = currentGames + 1;
+        
+        // Update user metadata via Netlify Identity
+        await netlifyIdentity.gotrue.currentUser().update({
+          data: {
+            joffre_xp: newXP,
+            joffre_wins: newWins,
+            joffre_games: newGames,
+            joffre_level: Math.floor(newXP / 500) + 1
+          }
+        });
+        
+        console.log(`XP awarded: ${amount}. New total: ${newXP}`);
+      } catch (error) {
+        console.error("Error awarding XP:", error);
+      }
+    }
+
+    // Restart game button
+    document.getElementById('restartGameBtn').addEventListener('click', () => {
+      if (!isHost) return;
+      
+      // Reset game state
+      gameStateRef.update({
+        gameEnded: false,
+        teamOneScore: 0,
+        teamTwoScore: 0,
+        biddingPhase: true,
+        currentBidder: -1,
+        highestBid: 0,
+        highestBidder: -1,
+        passedPlayers: [],
+        bidsPlaced: [],
+        roundNumber: 0,
+        waitingForNextRound: false
+      }).then(() => {
+        document.getElementById('gameEndScreen').classList.remove('show');
+        initializeGame();
+      });
+    });
+
+    // Back to lobby button
+    document.getElementById('backToLobbyBtn').addEventListener('click', () => {
+      window.location.href = 'joffreLobby.html';
+    });
+  </script>
+</body>
+</html>

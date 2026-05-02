@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../schooltoolicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Joffre - Lobbies</title>
+  <style>
+    #menu-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1001;
+        transition: background-color 0.3s;
+        }
+
+        #menu-btn:hover {
+        background-color: #1f2e3a;
+        }
+
+        #menu {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 260px;
+        height: 100%;
+        background-color: #2c3e50;
+        color: white;
+        padding-top: 70px;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #menu.open {
+        left: 0;
+        }
+
+        #menu a {
+        display: flex;
+        align-items: center;
+        padding: 14px 24px;
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        }
+
+        #menu a i {
+        margin-right: 12px;
+        width: 20px;
+        }
+
+        #menu a:hover {
+        background-color: #34495e;
+        }
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a, #333);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: #222;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      padding: 30px 40px;
+      width: 420px;
+      text-align: center;
+      transition: 0.3s ease;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #f7c74f;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #333;
+      color: white;
+      font-size: 1em;
+    }
+
+    .lobbyButton {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #f7c74f;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s ease;
+    }
+
+    button:hover { background: #ffd85a; }
+    .hidden { display: none !important; }
+    .link { color: #aaa; margin-top: 15px; font-size: 0.9em; cursor: pointer; }
+    .link:hover { color: #f7c74f; }
+
+    /* Zone des joueurs */
+    #playersList {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .player-slot {
+      background: #333;
+      border-radius: 10px;
+      padding: 15px;
+      font-weight: bold;
+      border: 2px solid #444;
+      transition: 0.3s;
+    }
+
+    .player-slot.host {
+      border-color: #f7c74f;
+      box-shadow: 0 0 10px #f7c74f88;
+    }
+
+    /* Interface de paramètres (host) */
+    #hostSettings {
+      margin-left: 30px;
+      background: #2c2c2c;
+      border-radius: 12px;
+      padding: 20px;
+      width: 250px;
+      text-align: left;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    #waitingArea {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    /* XP and Level Display */
+    .auth-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 1002;
+    }
+
+    #auth-btn {
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #auth-btn:hover {
+      background-color: #1f2e3a;
+    }
+
+    #userStats {
+      background: rgba(44, 62, 80, 0.9);
+      padding: 10px 20px;
+      border-radius: 12px;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    #userStats.show {
+      display: block;
+    }
+
+    .level-badge {
+      font-size: 1.2rem;
+      color: #ffd700;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .xp-bar-container {
+      width: 150px;
+      height: 10px;
+      background: #34495e;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 5px 0;
+    }
+
+    .xp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    }
+
+    .stats-text {
+      font-size: 0.85rem;
+      color: #ecf0f1;
+    }
+
+    /* Locked Feature Overlay */
+    .locked-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 12px;
+      cursor: not-allowed;
+    }
+
+    .lock-icon {
+      font-size: 2rem;
+      color: #e74c3c;
+    }
+
+    .feature-locked {
+      position: relative;
+      opacity: 0.5;
+    }
+
+    .unlock-message {
+      font-size: 0.9rem;
+      color: #f39c12;
+      margin-top: 10px;
+    }
+    #lobbyChatContainer {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 260px;
+      height: 280px;
+      background: rgba(0,0,0,0.75);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      color: white;
+      z-index: 2000;
+    }
+
+    #lobbyChatMessages {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      padding-right: 5px;
+    }
+
+    #lobbyChatInput {
+      background: #333;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      color: white;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <button id="menu-btn" onmouseenter="mouseEnter(`bars`)" onmouseleave="mouseLeave(`bars`)"><i class="fas fa-bars" id="bars"></i> Menu</button>
+
+  <div id="menu">
+    <a href="/index.html" onmouseenter="mouseEnter('home')" onmouseleave="mouseLeave('home')"><i class="fas fa-home" id="home"></i> Accueil</a>
+    <a href="/CountDown.html" onmouseenter="mouseEnter('cd')" onmouseleave="mouseLeave('cd')"><i class="fas fa-hourglass-half" id="cd"></i> Compte à rebours</a>
+    <a href="/Clock.html" onmouseenter="mouseEnter('clock')" onmouseleave="mouseLeave('clock')"><i class="fas fa-clock" id="clock"></i> Horloge</a>
+    <a href="/weather.html" onmouseenter="mouseEnter('weather')" onmouseleave="mouseLeave('weather')"><i class="fas fa-sun" id="weather"></i> Météo</a>
+    <a href="/Schedule.html" onmouseenter="mouseEnter('schedule')" onmouseleave="mouseLeave('schedule')"><i class="fas fa-calendar-alt" id="schedule"></i> Horaire</a>
+    <a href="/calculator.html" onmouseenter="mouseEnter('calc')" onmouseleave="mouseLeave('calc')"><i class="fa-solid fa-calculator" id="calc"></i> Calculatrice</a>
+    <a href="/games/gameHome.html" onmouseenter="mouseEnter('gameIcon')" onmouseleave="mouseLeave('gameIcon')"><i class="fa-solid fa-gamepad" id="gameIcon"></i> Menu des jeux</a>
+    <a href="/suggestionForm.html" onmouseenter="mouseEnter('sugg')" onmouseleave="mouseLeave('sugg')"><i class="fas fa-comment-dots" id="sugg"></i> Suggestion</a>
+    <a href="https://www.mozaikportail.ca" onmouseenter="mouseEnter('mozaik')" onmouseleave="mouseLeave('mozaik')"><i class="fas fa-link" id="mozaik"></i> Mozaik</a>
+  </div>
+
+  <!-- 🔵 Lobby Chat -->
+  <div id="lobbyChatContainer" class="hidden">
+    <div id="lobbyChatMessages"></div>
+    <input id="lobbyChatInput" type="text" placeholder="Écrire un message..." />
+  </div>
+
+
+  <div class="auth-container">
+    <div id="userStats">
+      <div class="level-badge">⭐ Niveau <span id="userLevel">1</span></div>
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xpBarFill" style="width: 0%"></div>
+      </div>
+      <div class="stats-text"><span id="userXP">0</span> / <span id="nextLevelXP">500</span> XP</div>
+      <div class="stats-text">🏆 <span id="userWins">0</span> Victoires</div>
+    </div>
+    <button id="auth-btn">Se connecter</button>
+  </div>
+
+  <div class="container" id="loginScreen">
+    <h1>Connexion</h1>
+    <input type="text" id="username" placeholder="Entrez votre pseudo" />
+    <button id="loginBtn" class="lobbyButton">Se connecter</button>
+  </div>
+
+  <div class="container hidden" id="lobbyScreen">
+    <h1>Bienvenue, <span id="playerName"></span></h1>
+    <input type="text" id="lobbyName" placeholder="Nom du lobby" />
+    <button id="createLobbyBtn" class="lobbyButton">Créer un lobby</button>
+
+    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #444;">
+    <input type="text" id="joinCode" placeholder="Code du lobby" />
+    <button id="joinLobbyBtn" class="lobbyButton">Rejoindre un lobby</button>
+
+    <div class="link" id="logoutLink">Se déconnecter</div>
+  </div>
+
+  <div class="container hidden" id="waitingScreen">
+    <div id="waitingArea">
+      <div>
+        <h1>Lobby : <span id="currentLobby"></span></h1>
+        <div id="playersList"></div>
+        <button id="leaveLobbyBtn" class="lobbyButton">Quitter le lobby</button>
+      </div>
+
+      <div id="hostSettings" class="hidden">
+        <h2>⚙️ Paramètres</h2>
+        <label>Nombre de manches :</label>
+        <input type="number" id="roundsInput" min="1" max="10" value="3">
+        <br><br>
+        <button id="startGameBtn" class="lobbyButton">Démarrer la partie</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container hidden" id="notFoundScreen">
+    <h1>Lobby non trouvé</h1>
+    <p>Aucun lobby avec ce code n'a été trouvé.</p>
+    <button id="backToLobbyBtn" class="lobbyButton">Retour</button>
+  </div>
+
+  <div class="container hidden" id="hostLeftScreen">
+    <h1>🏠 L'hôte a quitté le lobby</h1>
+    <p>Le lobby n'existe plus. Vous allez être redirigé.</p>
+    <button id="backFromHostLeftBtn" class="lobbyButton">Retour</button>
+  </div>
+
+  <script src="/auth.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+      function mouseEnter(id) {
+        const newId = document.getElementById(id);
+        newId.classList.add('fa-bounce');
+      }
+      
+      function mouseLeave(id) {
+        const newId = document.getElementById(id);
+        newId.classList.remove('fa-bounce');
+      }
+  </script>
+  <script>
+      document.getElementById("menu-btn").addEventListener("click", function () {
+        document.getElementById("menu").classList.toggle("open");
+      });
+  </script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVlj8ZM8tipP_CEZZsspt5gnPupMQCIKU",
+      authDomain: "joffre-17fad.firebaseapp.com",
+      databaseURL: "https://joffre-17fad-default-rtdb.firebaseio.com",
+      projectId: "joffre-17fad",
+      storageBucket: "joffre-17fad.firebasestorage.app",
+      messagingSenderId: "379635357873",
+      appId: "1:379635357873:web:a16437780f312ea56eaa90"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    function createKey(length) {
+      const chars = 'abcdefghijklmnopqrstuvwxyz123456789';
+      return Array.from({length}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
+
+    // Netlify Identity Setup
+    netlifyIdentity.init();
+
+    const authBtn = document.getElementById("auth-btn");
+    const userStats = document.getElementById("userStats");
+
+    function updateAuthButton(user) {
+      if (user) {
+        authBtn.textContent = "Se déconnecter";
+        authBtn.onclick = () => netlifyIdentity.logout();
+        
+        // Show user stats
+        updateUserStats(user);
+      } else {
+        authBtn.textContent = "Se connecter";
+        authBtn.onclick = () => netlifyIdentity.open();
+        userStats.classList.remove('show');
+      }
+    }
+
+    function updateUserStats(user) {
+      const xp = user.user_metadata?.joffre_xp || 0;
+      const level = Math.floor(xp / 500) + 1;
+      const xpInCurrentLevel = xp % 500;
+      const xpForNextLevel = 500;
+      const wins = user.user_metadata?.joffre_wins || 0;
+      
+      document.getElementById('userLevel').textContent = level;
+      document.getElementById('userXP').textContent = xpInCurrentLevel;
+      document.getElementById('nextLevelXP').textContent = xpForNextLevel;
+      document.getElementById('userWins').textContent = wins;
+      document.getElementById('xpBarFill').style.width = (xpInCurrentLevel / xpForNextLevel * 100) + '%';
+      
+      userStats.classList.add('show');
+    }
+
+    netlifyIdentity.on("init", updateAuthButton);
+    netlifyIdentity.on("login", (user) => {
+      updateAuthButton(user);
+      netlifyIdentity.close();
+    });
+    netlifyIdentity.on("logout", () => updateAuthButton(null));
+  </script>
+
+  <script>
+    const loginScreen = document.getElementById('loginScreen');
+    const lobbyScreen = document.getElementById('lobbyScreen');
+    const waitingScreen = document.getElementById('waitingScreen');
+
+    const usernameInput = document.getElementById('username');
+    const lobbyNameInput = document.getElementById('lobbyName');
+    const joinCodeInput = document.getElementById('joinCode');
+    const playerNameDisplay = document.getElementById('playerName');
+    const currentLobbyDisplay = document.getElementById('currentLobby');
+    const playersList = document.getElementById('playersList');
+    const hostSettings = document.getElementById('hostSettings');
+
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutLink = document.getElementById('logoutLink');
+    const createLobbyBtn = document.getElementById('createLobbyBtn');
+    const joinLobbyBtn = document.getElementById('joinLobbyBtn');
+    const leaveLobbyBtn = document.getElementById('leaveLobbyBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+
+    let currentUser = null;
+    let currentLobbyRef = null;
+    let currentPlayerRef = null;
+    let userUid = null;
+    let isHost = false;
+    let lobbyJoined = false;
+    let playerNumber;
+    let isBot;
+
+    const lobbyKey = createKey(6);
+
+    loginBtn.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      if (!username) return alert("Entrez un pseudo !");
+      currentUser = username;
+      playerNameDisplay.textContent = username;
+      loginScreen.classList.add('hidden');
+      lobbyScreen.classList.remove('hidden');
+    });
+
+    logoutLink.addEventListener('click', () => {
+      firebase.auth().signOut();
+      usernameInput.value = "";
+      lobbyScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+    });
+
+    startGameBtn.addEventListener('click', () => {
+      currentLobbyRef.child('players').once('value').then(snapshot => {
+        const players = snapshot.val() || {};
+        
+        let redCount = 0, blueCount = 0;
+        Object.values(players).forEach(player => {
+          if (player.isRedTeam) redCount++;
+          if (player.isBlueTeam) blueCount++;
+        });
+        if (Object.keys(players).length === 4 && (redCount !== 2 || blueCount !== 2)) {
+          alert("Il doit y avoir exactement 2 joueurs dans chaque Équipe !");
+          return;
+        }
+
+        if (Object.keys(players).length === 3 && (redCount === 3 || blueCount === 3)) {
+          alert("Avec 3 joueurs, il ne peut pas y avoir 3 joueurs dans la même Équipe !");
+          return;
+        }
+
+        if (Object.keys(players).length === 2 || Object.keys(players).length === 3) {
+          alert("Pour le moment, la partie ne peut commencer qu'avec 4 ou 1 joueur(s).");
+          return;
+        }
+
+        const botPlayers = {0: true, 1: true, 2: true, 3: true};
+        Object.values(players).forEach(player => {
+          const playerNum = player.playerNumber - 1;
+          botPlayers[playerNum] = false;
+        });
+        
+        currentLobbyRef.update({ gameStarted: true });
+        
+        const lobbyName = document.getElementById('lobbyName').value.trim();
+        const botPlayersJSON = JSON.stringify(botPlayers);
+        userId
+        window.location.href = `joffreMultiplayer.html?username=${usernameInput.value.trim()}&lobbyName=${lobbyName}&=${userUid}&isHost=${isHost}&lobbyId=${lobbyKey}&playerNumber=${playerNumber}&isBot=false&botPlayers=${encodeURIComponent(botPlayersJSON)}`;
+      });
+    });
+
+    function assignPlayerNumber(players) {
+      const usedNumbers = Object.values(players).map(p => p.playerNumber).filter(Boolean);
+      for (let i = 1; i <= 4; i++) {
+        if (!usedNumbers.includes(i)) return i;
+      }
+      return null;
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        userUid = user.uid;
+
+        usernameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') loginBtn.click();
+        });
+
+        lobbyNameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') createLobbyBtn.click();
+        });
+
+        joinCodeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') joinLobbyBtn.click();
+        });
+
+        createLobbyBtn.addEventListener('click', () => {
+          const lobbyName = document.getElementById('lobbyName').value.trim();
+          if (!lobbyName) return alert("Entrez un nom de lobby !");
+          isHost = true;
+
+          const lobbyRef = firebase.database().ref('lobbies/' + lobbyKey);
+          const playerName = currentUser || "Inconnu";
+
+          lobbyRef.set({
+            name: lobbyName,
+            host: userUid,
+            players: { [userUid]: { name: playerName, hand: [], isRedTeam: true, isBlueTeam: false, playerNumber: 1} }
+          });
+
+          playerNumber = 1;
+          lobbyRef.onDisconnect().remove();
+
+          currentLobbyRef = lobbyRef;
+          currentPlayerRef = lobbyRef.child("players/" + userUid);
+
+          currentLobbyDisplay.textContent = `${lobbyName} (${lobbyKey})`;
+          lobbyScreen.classList.add('hidden');
+          waitingScreen.classList.remove('hidden');
+          hostSettings.classList.remove('hidden');
+
+          document.getElementById("lobbyChatContainer").classList.remove("hidden");
+          initializeLobbyChat(lobbyKey);
+
+          lobbyJoined = true;
+          listenForPlayers(lobbyKey);
+          listenForLobbyDeletion(lobbyKey);
+          listenForGameStart(lobbyKey);
+        });
+
+        joinLobbyBtn.addEventListener('click', () => {
+          const code = document.getElementById('joinCode').value.trim();
+          if (!code) return alert("Entrez un code de lobby !");
+
+          const lobbyRef = firebase.database().ref(`lobbies/${code}`);
+
+          lobbyRef.once('value').then(snapshot => {
+            const lobby = snapshot.val();
+
+            if (!snapshot.exists()) {
+              showLobbyNotFound();
+              lobbyJoined = false;
+              return;
+            }
+
+            if (lobby.players.userUid) {
+              alert("Vous êtes déjà dans ce lobby !");
+              return;
+            }
+
+            isHost = false;
+            const playerName = currentUser || "Inconnu";
+            const players = snapshot.val().players || {};
+            playerNumber = assignPlayerNumber(players);
+
+            const playerRef = firebase.database().ref(`lobbies/${code}/players/${userUid}`);
+
+            playerRef.set({ name: playerName, hand: [], isRedTeam: false, isBlueTeam: true, playerNumber});
+            lobbyRef.child(`playerNames/${playerNumber - 1}`).set(playerName);
+            playerRef.onDisconnect().remove();
+
+            currentLobbyRef = lobbyRef;
+            currentPlayerRef = playerRef;
+            lobbyJoined = true;
+
+            currentLobbyDisplay.textContent = `${snapshot.val().name || code} (${code})`;
+            lobbyScreen.classList.add('hidden');
+            waitingScreen.classList.remove('hidden');
+            hostSettings.classList.add('hidden');
+
+            document.getElementById("lobbyChatContainer").classList.remove("hidden");
+            initializeLobbyChat(code);
+
+            listenForPlayers(code);
+            listenForLobbyDeletion(code);
+            listenForGameStart(code);
+          }).catch(err => {
+            console.error(err);
+            alert("Erreur réseau — réessaye.");
+          });
+        });
+
+        leaveLobbyBtn.addEventListener('click', () => {
+          if (currentPlayerRef) currentPlayerRef.remove();
+          if (isHost && currentLobbyRef) currentLobbyRef.remove();
+
+          lobbyJoined = false;
+          waitingScreen.classList.add('hidden');
+          lobbyScreen.classList.remove('hidden');
+          playersList.innerHTML = "";
+        });
+      }
+    });
+
+    firebase.auth().signInAnonymously();
+
+    function listenForPlayers(lobbyKey) {
+      const playersRef = firebase.database().ref(`lobbies/${lobbyKey}/players`);
+      const hostRef = firebase.database().ref(`lobbies/${lobbyKey}/host`);
+
+      hostRef.once('value', snap => {
+        const hostId = snap.val();
+        playersRef.on('value', snapshot => {
+          const players = snapshot.val() || {};
+          updatePlayerSlots(players, hostId);
+        });
+      });
+    }
+
+    function listenForGameStart(lobbyKey) {
+      const gameStartedRef = firebase.database().ref(`lobbies/${lobbyKey}/gameStarted`);
+      gameStartedRef.on('value', snapshot => {
+        if (snapshot.val() === true) {        
+          const lobbyName = document.getElementById('lobbyName').value.trim();
+          window.location.href = `joffreMultiplayer.html?username=${usernameInput.value.trim()}&lobbyName=${lobbyName}&userId=${userUid}&isHost=${isHost}&lobbyId=${lobbyKey}&playerNumber=${playerNumber}&isBot=false`;
+        }
+      });
+    }
+
+    function updatePlayerSlots(players, hostId) {
+      const allPlayers = Object.values(players);
+      playersList.innerHTML = "";
+
+      for (let i = 0; i < 4; i++) {
+        const playerData = allPlayers[i];
+        const slot = document.createElement("button");
+        slot.classList.add("player-slot");
+
+        if (playerData) {
+          slot.textContent = playerData.name + (Object.keys(players)[i] === hostId ? " 👑" : "");
+          if (Object.keys(players)[i] === hostId) slot.classList.add("host");
+
+          if (playerData.isRedTeam === true) {
+            slot.style.background = "#ff0000";
+          } else if (playerData.isBlueTeam === true) {
+            slot.style.background = "#0000ff";
+          } else {
+            slot.style.background = "#333";
+          }
+        } else {
+          slot.textContent = "En attente...";
+          slot.style.background = "#333";
+        }
+        playersList.appendChild(slot);
+
+        slot.addEventListener('click', () => {
+          if (!isHost) return;
+
+          const playerKey = Object.keys(players)[i];
+          const playerRef = firebase.database().ref(`lobbies/${lobbyKey}/players/${playerKey}`);
+
+          if (playerData.isRedTeam === true) {
+            playerRef.update({ isRedTeam: false, isBlueTeam: true });
+          } else if (playerData.isBlueTeam === true) {
+            playerRef.update({ isRedTeam: true, isBlueTeam: false });
+          }
+        });
+      }
+    }
+
+    const notFoundScreen = document.getElementById('notFoundScreen');
+    const backToLobbyBtn = document.getElementById('backToLobbyBtn');
+
+    function showLobbyNotFound() {
+      lobbyJoined = false;
+      lobbyScreen.classList.add('hidden');
+      waitingScreen.classList.add('hidden');
+      notFoundScreen.classList.remove('hidden');
+    }
+
+    backToLobbyBtn.addEventListener('click', () => {
+      notFoundScreen.classList.add('hidden');
+      lobbyScreen.classList.remove('hidden');
+    });
+
+    const hostLeftScreen = document.getElementById('hostLeftScreen');
+    const backFromHostLeftBtn = document.getElementById('backFromHostLeftBtn');
+
+    backFromHostLeftBtn.addEventListener('click', () => {
+      hostLeftScreen.classList.add('hidden');
+      lobbyScreen.classList.remove('hidden');
+    });
+
+    function listenForLobbyDeletion(lobbyKey) {
+      const lobbyRef = firebase.database().ref(`lobbies/${lobbyKey}`);
+
+      lobbyRef.on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+          if (lobbyJoined) {
+            lobbyJoined = false;
+            if (!isHost) {
+              waitingScreen.classList.add('hidden');
+              hostLeftScreen.classList.remove('hidden');
+            } else {
+              waitingScreen.classList.add('hidden');
+              lobbyScreen.classList.remove('hidden');
+            }
+          }
+          lobbyRef.off();
+        }
+      });
+    }
+    function initializeLobbyChat(lobbyId) {
+      const chatRef = firebase.database().ref(`lobbies/${lobbyId}/lobbyChat`);
+      const chatInput = document.getElementById("lobbyChatInput");
+      const chatMessages = document.getElementById("lobbyChatMessages");
+
+      // Send a message
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && chatInput.value.trim() !== "") {
+          chatRef.push({
+            name: currentUser,
+            text: chatInput.value.trim(),
+            time: Date.now()
+          });
+          chatInput.value = "";
+        }
+      });
+
+      // Receive messages
+      chatRef.on("child_added", (snapshot) => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        const t = new Date(msg.time);
+        const timeStr = t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+        console.log("New chat message:", msg);
+
+        div.innerHTML = `<strong>${msg.name}</strong> <span style="color:#aaa;">(${timeStr})</span><br>${msg.text}`;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
+    }
+  </script>
+</body>
+</html>
