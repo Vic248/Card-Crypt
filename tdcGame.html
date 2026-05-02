@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Crypt — Trou du Cul</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8cc7a;
+      --gold-dim: #7a5f28;
+      --bg-deep: #0a0705;
+      --bg-card: #110e09;
+      --bg-mid: #1a1409;
+      --text: #e8ddc8;
+      --text-dim: #9a8a6a;
+      --red: #8b1a1a;
+      --red-bright: #c0392b;
+      --green: #27ae60;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ══════════════════════════════
+       NAVBAR
+    ══════════════════════════════ */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(10,7,5,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      padding: 0 2rem;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar-logo {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 0.9rem;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.12em;
+    }
+
+    .navbar-center {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .lang-selector {
+      display: flex;
+      gap: 0.3rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+    }
+    .lang-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-dim);
+      padding: 0.18rem 0.45rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit; font-size: inherit;
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.07);
+    }
+
+    /* ══════════════════════════════
+       STEP INDICATOR
+    ══════════════════════════════ */
+    .step-bar {
+      position: fixed;
+      top: 54px; left: 0; right: 0;
+      z-index: 99;
+      background: rgba(10,7,5,0.9);
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+      padding: 0.7rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      transition: all 0.4s;
+      flex-shrink: 0;
+    }
+    .step-num.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.1);
+      box-shadow: 0 0 10px rgba(201,168,76,0.2);
+    }
+    .step-num.done {
+      border-color: var(--green);
+      background: rgba(39,174,96,0.15);
+      color: var(--green);
+    }
+
+    .step-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      transition: color 0.4s;
+    }
+    .step-item.active .step-label { color: var(--gold); }
+
+    .step-connector {
+      width: 40px;
+      height: 1px;
+      background: rgba(201,168,76,0.15);
+      margin: 0 0.8rem;
+      flex-shrink: 0;
+    }
+    .step-connector.done { background: rgba(39,174,96,0.3); }
+
+    /* ══════════════════════════════
+       MAIN AREA
+    ══════════════════════════════ */
+    .game-area {
+      position: relative;
+      z-index: 2;
+      padding-top: 110px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Screen switching */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      padding: 2.5rem 2rem 5rem;
+      animation: fadeIn 0.4s ease both;
+    }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section headers */
+    .screen-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 0.4rem;
+    }
+    .screen-subtitle {
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      line-height: 1.5;
+    }
+
+    .gold-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 0 auto 2.5rem;
+      max-width: 300px;
+    }
+    .gold-divider-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .gold-divider-diamond {
+      width: 5px; height: 5px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       SCREEN 1 — POSITION DRAW
+    ══════════════════════════════ */
+
+    /* Card deck to draw from */
+    .deck-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 3rem;
+    }
+
+    .deck-stack {
+      position: relative;
+      width: 110px;
+      height: 154px;
+      margin-bottom: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* Stack shadow cards */
+    .deck-stack::before, .deck-stack::after {
+      content: '';
+      position: absolute;
+      width: 110px; height: 154px;
+      border-radius: 7px;
+      border: 1px solid rgba(201,168,76,0.2);
+      background: var(--bg-card);
+    }
+    .deck-stack::before { top: -4px; left: -3px; transform: rotate(-3deg); }
+    .deck-stack::after  { top: -2px; left: -1px; transform: rotate(-1deg); }
+
+    .deck-top {
+      position: relative;
+      z-index: 3;
+      width: 110px; height: 154px;
+      border-radius: 7px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      overflow: hidden;
+    }
+    .deck-top:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 20px rgba(201,168,76,0.1);
+    }
+    .deck-top.drawn { transform: translateY(-4px); opacity: 0.4; cursor: default; }
+
+    /* Card back pattern */
+    .card-back-pattern {
+      width: 86px; height: 130px;
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 4px;
+      display: grid;
+      grid-template-columns: repeat(5,1fr);
+      grid-template-rows: repeat(7,1fr);
+      gap: 2px;
+      padding: 4px;
+    }
+    .card-back-pattern span {
+      display: block;
+      background: rgba(201,168,76,0.08);
+      border-radius: 1px;
+    }
+
+    .draw-hint {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+    }
+
+    /* Players draw results */
+    .players-draw-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .player-draw-slot {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.1);
+      padding: 1rem 0.8rem;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+    .player-draw-slot.revealed { border-color: rgba(201,168,76,0.3); }
+
+    .player-draw-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+    }
+
+    .player-draw-card {
+      margin: 0 auto 0.6rem;
+      width: 56px; height: 78px;
+      border-radius: 4px;
+      border: 1px solid rgba(201,168,76,0.15);
+      background: var(--bg-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .player-draw-card.hidden::after {
+      content: '?';
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      color: rgba(201,168,76,0.2);
+    }
+    .player-draw-card.revealed {
+      background: var(--bg-card);
+      border-color: rgba(201,168,76,0.4);
+      animation: cardFlip 0.4s ease both;
+    }
+    @keyframes cardFlip {
+      0% { transform: rotateY(90deg); opacity: 0; }
+      100% { transform: rotateY(0); opacity: 1; }
+    }
+
+    .card-rank {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .card-suit {
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+    .red { color: var(--red-bright); }
+    .black { color: var(--text); }
+
+    .player-draw-role {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid;
+      display: inline-block;
+      margin-top: 0.3rem;
+    }
+    .role-president { color: var(--gold); border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.08); }
+    .role-vp        { color: #a0c4ff; border-color: rgba(160,196,255,0.3); background: rgba(160,196,255,0.06); }
+    .role-middle    { color: var(--text-dim); border-color: rgba(255,255,255,0.1); }
+    .role-tdc       { color: #ff6b6b; border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.06); }
+
+    /* ══════════════════════════════
+       SCREEN 2 — CARD TRADE
+    ══════════════════════════════ */
+
+    .trade-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .trade-player-box {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.12);
+      padding: 1.4rem;
+    }
+
+    .trade-player-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+    }
+
+    .trade-player-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      color: var(--text);
+    }
+
+    .trade-instruction {
+      font-style: italic;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+
+    /* Hand of cards */
+    .hand {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      min-height: 90px;
+    }
+
+    .hand-card {
+      width: 52px; height: 72px;
+      border-radius: 4px;
+      border: 1px solid rgba(201,168,76,0.2);
+      background: var(--bg-mid);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .hand-card:hover {
+      border-color: var(--gold-dim);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .hand-card.selected {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.08);
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 12px rgba(201,168,76,0.2);
+    }
+    .hand-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: -6px; right: -6px;
+      width: 14px; height: 14px;
+      background: var(--gold);
+      color: var(--bg-deep);
+      border-radius: 50%;
+      font-size: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .hand-card.locked {
+      opacity: 0.35;
+      cursor: default;
+      transform: none !important;
+    }
+
+    .hand-card-rank {
+      font-family: Georgia, serif;
+      font-size: 0.9rem;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .hand-card-suit {
+      font-size: 0.75rem;
+      line-height: 1;
+    }
+
+    /* Pass counter */
+    .pass-info {
+      background: rgba(201,168,76,0.04);
+      border: 1px solid rgba(201,168,76,0.1);
+      padding: 0.6rem 0.8rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    .pass-count {
+      color: var(--gold);
+      font-style: normal;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      padding: 0.65rem 1.2rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      flex: 1;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2a1f08, #4a3410);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-dim);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3a2c0e, #5e4318);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.3;
+      cursor: default;
+      transform: none;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid rgba(201,168,76,0.15);
+    }
+    .btn-ghost:hover {
+      border-color: var(--gold-dim);
+      color: var(--text);
+    }
+    .btn-ghost:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+    .btn-full {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 0.78rem;
+    }
+
+    /* Trade summary */
+    .trade-summary {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.15);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    .trade-summary.visible { display: block; }
+    .trade-summary-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .trade-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(201,168,76,0.05);
+      font-size: 0.9rem;
+    }
+    .trade-summary-row:last-child { border-bottom: none; }
+    .trade-arrow { color: var(--gold-dim); font-size: 0.8rem; }
+
+    /* ══════════════════════════════
+       BUTTONS
+    ══════════════════════════════ */
+    .next-btn-area {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .btn-next {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      padding: 0.85rem 3rem;
+      background: linear-gradient(135deg, #2a1f08, #4a3410);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-dim);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-next:hover {
+      background: linear-gradient(135deg, #3a2c0e, #5e4318);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(201,168,76,0.15);
+    }
+    .btn-next:disabled {
+      opacity: 0.3;
+      cursor: default;
+      transform: none;
+    }
+
+    /* ══════════════════════════════
+       TOAST
+    ══════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-mid);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      padding: 0.75rem 1.6rem;
+      z-index: 300;
+      opacity: 0;
+      transition: all 0.4s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .trade-layout { grid-template-columns: 1fr; }
+      .players-draw-grid { grid-template-columns: repeat(3, 1fr); }
+      .step-label { display: none; }
+      .step-connector { width: 24px; margin: 0 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-logo">Card Crypt</div>
+    <div class="navbar-center" id="navbar-game-label">Trou du Cul</div>
+    <div class="lang-selector">
+      <button class="lang-btn active" onclick="setLang('fr')">Français</button>
+      <button class="lang-btn" onclick="setLang('en')">English</button>
+    </div>
+  </nav>
+
+  <!-- STEP BAR -->
+  <div class="step-bar">
+    <div class="step-item active" id="step-item-1">
+      <div class="step-num active" id="step-num-1">1</div>
+      <span class="step-label" id="step-label-1">Positions</span>
+    </div>
+    <div class="step-connector" id="step-conn-1"></div>
+    <div class="step-item" id="step-item-2">
+      <div class="step-num" id="step-num-2">2</div>
+      <span class="step-label" id="step-label-2">Échange</span>
+    </div>
+    <div class="step-connector" id="step-conn-2"></div>
+    <div class="step-item" id="step-item-3">
+      <div class="step-num" id="step-num-3">3</div>
+      <span class="step-label" id="step-label-3">Jeu</span>
+    </div>
+  </div>
+
+  <div class="game-area">
+
+    <!-- ══════════════════════════════
+         SCREEN 1 — DRAW POSITION
+    ══════════════════════════════ -->
+    <div class="screen active" id="screen-1">
+      <p class="screen-title" id="s1-title">Étape 1</p>
+      <p class="screen-subtitle" id="s1-subtitle">
+        Chaque joueur tire une carte pour déterminer sa position.<br>
+        La plus haute devient Président, la plus basse devient Trou du Cul.
+      </p>
+      <div class="gold-divider">
+        <div class="gold-divider-line"></div>
+        <div class="gold-divider-diamond"></div>
+        <div class="gold-divider-line"></div>
+      </div>
+
+      <!-- Deck to draw from -->
+      <div class="deck-area">
+        <div class="deck-stack" id="deck-stack" onclick="drawCard()">
+          <div class="deck-top" id="deck-top">
+            <div class="card-back-pattern">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+        <div class="draw-hint" id="draw-hint">Cliquez pour tirer votre carte</div>
+      </div>
+
+      <!-- Players grid -->
+      <div class="players-draw-grid" id="players-draw-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="next-btn-area">
+        <button class="btn-next" id="btn-next-1" onclick="goToStep2()" disabled>
+          <span id="btn-next-1-label">Continuer →</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         SCREEN 2 — CARD TRADE
+    ══════════════════════════════ -->
+    <div class="screen" id="screen-2">
+      <p class="screen-title" id="s2-title">Étape 2</p>
+      <p class="screen-subtitle" id="s2-subtitle">
+        Le Président choisit 2 cartes à garder ou passer.<br>
+        Le Vice-Président choisit 1 carte.
+      </p>
+      <div class="gold-divider">
+        <div class="gold-divider-line"></div>
+        <div class="gold-divider-diamond"></div>
+        <div class="gold-divider-line"></div>
+      </div>
+
+      <div class="trade-layout">
+
+        <!-- President box -->
+        <div class="trade-player-box">
+          <div class="trade-player-header">
+            <span class="trade-player-name" id="president-name">Victorino</span>
+            <span class="player-draw-role role-president" id="president-role-badge">Président</span>
+          </div>
+          <p class="trade-instruction" id="president-instruction">
+            Choisissez 2 cartes. Vous pouvez passer 2 fois — à la 3e paire, vous devez garder.
+          </p>
+          <div class="pass-info">
+            <span id="pres-pass-label">Passes restantes :</span>
+            <span class="pass-count" id="pres-pass-count">2</span>
+          </div>
+          <div class="hand" id="president-hand">
+            <!-- Cards populated by JS -->
+          </div>
+          <div class="action-btns">
+            <button class="btn btn-ghost" id="btn-pres-pass" onclick="presidentPass()">
+              <span id="btn-pass-label">Passer</span>
+            </button>
+            <button class="btn btn-primary" id="btn-pres-keep" onclick="presidentKeep()" disabled>
+              <span id="btn-keep-label">Garder</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- VP box -->
+        <div class="trade-player-box">
+          <div class="trade-player-header">
+            <span class="trade-player-name" id="vp-name">Test</span>
+            <span class="player-draw-role role-vp" id="vp-role-badge">Vice-Président</span>
+          </div>
+          <p class="trade-instruction" id="vp-instruction">
+            Choisissez 1 carte. Vous pouvez passer 1 fois seulement.
+          </p>
+          <div class="pass-info">
+            <span id="vp-pass-label">Passes restantes :</span>
+            <span class="pass-count" id="vp-pass-count">1</span>
+          </div>
+          <div class="hand" id="vp-hand">
+            <!-- Cards populated by JS -->
+          </div>
+          <div class="action-btns">
+            <button class="btn btn-ghost" id="btn-vp-pass" onclick="vpPass()">
+              <span id="btn-vp-pass-label">Passer</span>
+            </button>
+            <button class="btn btn-primary" id="btn-vp-keep" onclick="vpKeep()" disabled>
+              <span id="btn-vp-keep-label">Garder</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade summary -->
+      <div class="trade-summary" id="trade-summary">
+        <div class="trade-summary-title" id="trade-summary-title">Résumé de l'échange</div>
+        <div id="trade-summary-content"></div>
+      </div>
+
+      <div class="next-btn-area">
+        <button class="btn-next" id="btn-next-2" onclick="goToStep3()" disabled>
+          <span id="btn-next-2-label">Lancer la partie →</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         SCREEN 3 — PLACEHOLDER
+    ══════════════════════════════ -->
+    <div class="screen" id="screen-3">
+      <p class="screen-title">Étape 3</p>
+      <p class="screen-subtitle" id="s3-subtitle">
+        La partie commence... bonne chance !
+      </p>
+      <div class="gold-divider">
+        <div class="gold-divider-line"></div>
+        <div class="gold-divider-diamond"></div>
+        <div class="gold-divider-line"></div>
+      </div>
+      <div style="text-align:center; color:var(--text-dim); font-style:italic; margin-top:3rem;">
+        🃏 <span id="s3-coming">Le plateau de jeu arrive bientôt...</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ══════════════════════════════
+  // GAME STATE
+  // ══════════════════════════════
+  const SUITS = ['♠','♣','♥','♦'];
+  const RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
+  const RANK_VALUE = { '3':1,'4':2,'5':3,'6':4,'7':5,'8':6,'9':7,'10':8,'J':9,'Q':10,'K':11,'A':12,'2':13 };
+  const RED_SUITS = new Set(['♥','♦']);
+
+  // Mock players (in real game, from Firebase)
+  const PLAYERS = [
+    { id: 0, name: 'Victorino', isMe: true },
+    { id: 1, name: 'Test1', isMe: false },
+    { id: 2, name: 'Test2', isMe: false },
+    { id: 3, name: 'Test3', isMe: false },
+  ];
+
+  let drawnCards = {}; // playerId -> {rank, suit}
+  let myDrawDone = false;
+  let allDrawn = false;
+  let roles = {}; // playerId -> role string
+  let deck = [];
+
+  // Trade state
+  let presPassesLeft = 2;
+  let vpPassesLeft = 1;
+  let presSelectedCards = [];
+  let vpSelectedCards = [];
+  let presKept = null;
+  let vpKept = null;
+  let presKeptDone = false;
+  let vpKeptDone = false;
+
+  let currentLang = 'fr';
+
+  // ── Build a full deck ──
+  function buildDeck() {
+    const d = [];
+    SUITS.forEach(s => RANKS.forEach(r => d.push({ rank: r, suit: s })));
+    // shuffle
+    for (let i = d.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [d[i], d[j]] = [d[j], d[i]];
+    }
+    return d;
+  }
+
+  // ══════════════════════════════
+  // TRANSLATIONS
+  // ══════════════════════════════
+  const T = {
+    fr: {
+      'navbar-game-label': 'Trou du Cul',
+      'step-label-1': 'Positions',
+      'step-label-2': 'Échange',
+      'step-label-3': 'Jeu',
+      's1-title': 'Étape 1 — Tirage',
+      's1-subtitle': 'Chaque joueur tire une carte pour déterminer sa position.\nLa plus haute devient Président, la plus basse devient Trou du Cul.',
+      'draw-hint': 'Cliquez pour tirer votre carte',
+      'draw-hint-done': 'Carte tirée !',
+      'btn-next-1-label': 'Continuer →',
+      's2-title': 'Étape 2 — Échange',
+      's2-subtitle': 'Le Président choisit 2 cartes à garder ou passer.\nLe Vice-Président choisit 1 carte.',
+      'president-role-badge': 'Président',
+      'vp-role-badge': 'Vice-Président',
+      'president-instruction': 'Choisissez 2 cartes. Vous pouvez passer 2 fois — à la 3e paire, vous devez garder.',
+      'vp-instruction': 'Choisissez 1 carte. Vous pouvez passer 1 fois seulement.',
+      'pres-pass-label': 'Passes restantes :',
+      'vp-pass-label': 'Passes restantes :',
+      'btn-pass-label': 'Passer',
+      'btn-keep-label': 'Garder',
+      'btn-vp-pass-label': 'Passer',
+      'btn-vp-keep-label': 'Garder',
+      'btn-next-2-label': 'Lancer la partie →',
+      's3-coming': 'Le plateau de jeu arrive bientôt...',
+      'toast-draw-wait': 'Attendez les autres joueurs...',
+      'toast-need-select-2': 'Sélectionnez 2 cartes.',
+      'toast-need-select-1': 'Sélectionnez 1 carte.',
+      'toast-pres-passed': 'Passé ! Nouvelle paire affichée.',
+      'toast-pres-no-pass': 'Vous devez garder cette paire.',
+      'toast-vp-no-pass': 'Vous devez garder cette carte.',
+      'trade-summary-title': 'Résumé de l\'échange',
+      'role-president': 'Président',
+      'role-vp': 'Vice-Président',
+      'role-secretary': 'Secrétaire',
+      'role-janitor': 'Concierge',
+      'role-vtdc': 'Vice-TDC',
+      'role-tdc': 'Trou du Cul',
+      'kept-label': 'a gardé',
+    },
+    en: {
+      'navbar-game-label': 'Asshole',
+      'step-label-1': 'Positions',
+      'step-label-2': 'Trade',
+      'step-label-3': 'Play',
+      's1-title': 'Step 1 — Draw',
+      's1-subtitle': 'Each player draws a card to determine their position.\nHighest becomes President, lowest becomes Asshole.',
+      'draw-hint': 'Click to draw your card',
+      'draw-hint-done': 'Card drawn!',
+      'btn-next-1-label': 'Continue →',
+      's2-title': 'Step 2 — Trade',
+      's2-subtitle': 'The President picks 2 cards to keep or pass.\nThe Vice-President picks 1 card.',
+      'president-role-badge': 'President',
+      'vp-role-badge': 'Vice-President',
+      'president-instruction': 'Choose 2 cards. You can pass twice — on the 3rd pair, you must keep.',
+      'vp-instruction': 'Choose 1 card. You can pass only once.',
+      'pres-pass-label': 'Passes left:',
+      'vp-pass-label': 'Passes left:',
+      'btn-pass-label': 'Pass',
+      'btn-keep-label': 'Keep',
+      'btn-vp-pass-label': 'Pass',
+      'btn-vp-keep-label': 'Keep',
+      'btn-next-2-label': 'Start the game →',
+      's3-coming': 'Game board coming soon...',
+      'toast-draw-wait': 'Waiting for other players...',
+      'toast-need-select-2': 'Select 2 cards.',
+      'toast-need-select-1': 'Select 1 card.',
+      'toast-pres-passed': 'Passed! New pair shown.',
+      'toast-pres-no-pass': 'You must keep this pair.',
+      'toast-vp-no-pass': 'You must keep this card.',
+      'trade-summary-title': 'Trade Summary',
+      'role-president': 'President',
+      'role-vp': 'Vice-President',
+      'role-secretary': 'Secretary',
+      'role-janitor': 'Janitor',
+      'role-vtdc': 'Vice-Asshole',
+      'role-tdc': 'Asshole',
+      'kept-label': 'kept',
+    }
+  };
+
+  function t(key) { return T[currentLang][key] || key; }
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+    applyTranslations();
+  }
+
+  function applyTranslations() {
+    const keys = ['navbar-game-label','step-label-1','step-label-2','step-label-3',
+      's1-title','draw-hint','btn-next-1-label','s2-title','president-role-badge',
+      'vp-role-badge','president-instruction','vp-instruction','pres-pass-label',
+      'vp-pass-label','btn-pass-label','btn-keep-label','btn-vp-pass-label',
+      'btn-vp-keep-label','btn-next-2-label','s3-coming','trade-summary-title'];
+    keys.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.textContent = t(k);
+    });
+
+    // Multiline subtitles
+    ['s1-subtitle','s2-subtitle'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.innerHTML = t(k).replace('\n','<br>');
+    });
+
+    // Role badges in draw grid
+    renderRoleBadges();
+  }
+
+  // ══════════════════════════════
+  // SCREEN 1 — DRAW
+  // ══════════════════════════════
+  function initDrawScreen() {
+    deck = buildDeck();
+    const grid = document.getElementById('players-draw-grid');
+    grid.innerHTML = '';
+    PLAYERS.forEach(p => {
+      const slot = document.createElement('div');
+      slot.className = 'player-draw-slot';
+      slot.id = 'draw-slot-' + p.id;
+      slot.innerHTML = `
+        <div class="player-draw-name">${p.name}</div>
+        <div class="player-draw-card hidden" id="draw-card-${p.id}"></div>
+        <div id="draw-role-${p.id}" style="min-height:24px;"></div>
+      `;
+      grid.appendChild(slot);
+
+      // Simulate other players drawing after a random delay
+      if (!p.isMe) {
+        setTimeout(() => simulateDraw(p.id), Math.random() * 3000 + 800);
+      }
+    });
+  }
+
+  function drawCard() {
+    if (myDrawDone) return;
+    const card = deck.pop();
+    drawnCards[0] = card; // Player 0 = me
+    myDrawDone = true;
+    document.getElementById('deck-top').classList.add('drawn');
+    document.getElementById('draw-hint').textContent = t('draw-hint-done');
+    revealCard(0, card);
+    checkAllDrawn();
+  }
+
+  function simulateDraw(playerId) {
+    const card = deck.pop();
+    drawnCards[playerId] = card;
+    revealCard(playerId, card);
+    checkAllDrawn();
+  }
+
+  function revealCard(playerId, card) {
+    const el = document.getElementById('draw-card-' + playerId);
+    const isRed = RED_SUITS.has(card.suit);
+    el.classList.remove('hidden');
+    el.classList.add('revealed');
+    el.innerHTML = `
+      <div class="card-rank ${isRed ? 'red' : 'black'}">${card.rank}</div>
+      <div class="card-suit ${isRed ? 'red' : 'black'}">${card.suit}</div>
+    `;
+    document.getElementById('draw-slot-' + playerId).classList.add('revealed');
+  }
+
+  function checkAllDrawn() {
+    if (Object.keys(drawnCards).length < PLAYERS.length) return;
+    allDrawn = true;
+    assignRoles();
+    renderRoleBadges();
+    document.getElementById('btn-next-1').disabled = false;
+  }
+
+  function assignRoles() {
+    // Sort players by card value descending
+    const sorted = PLAYERS.map(p => ({
+      id: p.id,
+      value: RANK_VALUE[drawnCards[p.id].rank]
+    })).sort((a, b) => b.value - a.value);
+
+    const roleMap = {
+      3: ['president','vp','tdc'],
+      4: ['president','vp','secretary','tdc'],
+      5: ['president','vp','secretary','janitor','tdc'],
+      6: ['president','vp','secretary','janitor','vtdc','tdc'],
+    };
+    const roleList = roleMap[PLAYERS.length] || roleMap[4];
+    sorted.forEach((p, i) => {
+      roles[p.id] = roleList[i] || 'middle';
+    });
+  }
+
+  function renderRoleBadges() {
+    PLAYERS.forEach(p => {
+      const el = document.getElementById('draw-role-' + p.id);
+      if (!el || !roles[p.id]) return;
+      const roleKey = 'role-' + roles[p.id];
+      const label = t(roleKey);
+      const cls = {
+        president: 'role-president', vp: 'role-vp', tdc: 'role-tdc',
+        vtdc: 'role-tdc', secretary: 'role-middle', janitor: 'role-middle'
+      }[roles[p.id]] || 'role-middle';
+      el.innerHTML = `<span class="player-draw-role ${cls}">${label}</span>`;
+    });
+  }
+
+  // ══════════════════════════════
+  // STEP NAVIGATION
+  // ══════════════════════════════
+  function goToStep2() {
+    setStep(2);
+    initTradeScreen();
+  }
+
+  function goToStep3() {
+    setStep(3);
+    // TODO: navigate to game board
+  }
+
+  function setStep(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + n).classList.add('active');
+
+    for (let i = 1; i <= 3; i++) {
+      const num = document.getElementById('step-num-' + i);
+      const item = document.getElementById('step-item-' + i);
+      num.classList.remove('active','done');
+      item.classList.remove('active');
+      if (i < n) { num.classList.add('done'); num.textContent = '✓'; }
+      else if (i === n) { num.classList.add('active'); num.textContent = i; item.classList.add('active'); }
+      else { num.textContent = i; }
+    }
+    for (let i = 1; i <= 2; i++) {
+      const conn = document.getElementById('step-conn-' + i);
+      conn.classList.toggle('done', i < n);
+    }
+  }
+
+  // ══════════════════════════════
+  // SCREEN 2 — TRADE
+  // ══════════════════════════════
+
+  // Build fake hand for demo
+  function buildHand(size) {
+    const d = buildDeck();
+    return d.slice(0, size).sort((a,b) => RANK_VALUE[a.rank] - RANK_VALUE[b.rank]);
+  }
+
+  let presHand = [];
+  let presCurrentPair = [];
+  let vpHand = [];
+  let vpCurrentCard = null;
+
+  function initTradeScreen() {
+    const presPlayer = PLAYERS.find(p => roles[p.id] === 'president');
+    const vpPlayer   = PLAYERS.find(p => roles[p.id] === 'vp');
+
+    document.getElementById('president-name').textContent = presPlayer ? presPlayer.name : '—';
+    document.getElementById('vp-name').textContent = vpPlayer ? vpPlayer.name : '—';
+
+    presPassesLeft = 2;
+    vpPassesLeft = 1;
+    presSelectedCards = [];
+    vpSelectedCards = [];
+    presKeptDone = false;
+    vpKeptDone = false;
+
+    document.getElementById('pres-pass-count').textContent = presPassesLeft;
+    document.getElementById('vp-pass-count').textContent = vpPassesLeft;
+
+    presHand = buildHand(6);
+    vpHand = buildHand(4);
+
+    showPresidentPair();
+    showVpCard();
+  }
+
+  function showPresidentPair() {
+    // Show 2 random cards from remaining hand
+    const remaining = presHand.filter(c => !presSelectedCards.includes(c));
+    if (remaining.length < 2) { presKeptDone = true; checkTradeComplete(); return; }
+
+    presCurrentPair = remaining.slice(0, 2);
+    const hand = document.getElementById('president-hand');
+    hand.innerHTML = '';
+
+    presCurrentPair.forEach((card, i) => {
+      const el = createHandCard(card, 'pres', i);
+      hand.appendChild(el);
+    });
+
+    updatePresButtons();
+  }
+
+  function showVpCard() {
+    const remaining = vpHand.filter(c => !vpSelectedCards.includes(c));
+    if (remaining.length === 0) { vpKeptDone = true; checkTradeComplete(); return; }
+
+    vpCurrentCard = remaining[0];
+    const hand = document.getElementById('vp-hand');
+    hand.innerHTML = '';
+    const el = createHandCard(vpCurrentCard, 'vp', 0);
+    hand.appendChild(el);
+    updateVpButtons();
+  }
+
+  function createHandCard(card, owner, idx) {
+    const isRed = RED_SUITS.has(card.suit);
+    const el = document.createElement('div');
+    el.className = 'hand-card';
+    el.dataset.idx = idx;
+    el.dataset.owner = owner;
+    el.innerHTML = `
+      <div class="hand-card-rank ${isRed ? 'red' : 'black'}">${card.rank}</div>
+      <div class="hand-card-suit ${isRed ? 'red' : 'black'}">${card.suit}</div>
+    `;
+    el.onclick = () => toggleCardSelect(el, owner, idx);
+    return el;
+  }
+
+  function toggleCardSelect(el, owner, idx) {
+    if (owner === 'pres') {
+      el.classList.toggle('selected');
+      const cards = document.querySelectorAll('#president-hand .hand-card');
+      const selected = [...cards].filter(c => c.classList.contains('selected'));
+      updatePresButtons();
+    } else {
+      // VP can only select 1
+      document.querySelectorAll('#vp-hand .hand-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      updateVpButtons();
+    }
+  }
+
+  function updatePresButtons() {
+    const cards = document.querySelectorAll('#president-hand .hand-card');
+    const selected = [...cards].filter(c => c.classList.contains('selected'));
+    const keepBtn = document.getElementById('btn-pres-keep');
+    const passBtn = document.getElementById('btn-pres-pass');
+    keepBtn.disabled = selected.length !== 2;
+    passBtn.disabled = presPassesLeft <= 0;
+  }
+
+  function updateVpButtons() {
+    const cards = document.querySelectorAll('#vp-hand .hand-card');
+    const selected = [...cards].filter(c => c.classList.contains('selected'));
+    const keepBtn = document.getElementById('btn-vp-keep');
+    const passBtn = document.getElementById('btn-vp-pass');
+    keepBtn.disabled = selected.length !== 1;
+    passBtn.disabled = vpPassesLeft <= 0;
+  }
+
+  function presidentPass() {
+    if (presPassesLeft <= 0) { showToast(t('toast-pres-no-pass')); return; }
+    const cards = document.querySelectorAll('#president-hand .hand-card');
+    const selected = [...cards].filter(c => c.classList.contains('selected'));
+    if (selected.length !== 2) { showToast(t('toast-need-select-2')); return; }
+
+    presPassesLeft--;
+    document.getElementById('pres-pass-count').textContent = presPassesLeft;
+    showToast(t('toast-pres-passed'));
+    // Discard these and show new pair
+    presSelectedCards.push(...presCurrentPair);
+    showPresidentPair();
+  }
+
+  function presidentKeep() {
+    const cards = document.querySelectorAll('#president-hand .hand-card');
+    const selected = [...cards].filter(c => c.classList.contains('selected'));
+    if (selected.length !== 2) { showToast(t('toast-need-select-2')); return; }
+
+    presKept = presCurrentPair;
+    presKeptDone = true;
+
+    // Lock hand and show kept
+    document.querySelectorAll('#president-hand .hand-card').forEach(c => {
+      c.classList.add('locked');
+      if (!c.classList.contains('selected')) c.style.opacity = '0.3';
+    });
+    document.getElementById('btn-pres-keep').disabled = true;
+    document.getElementById('btn-pres-pass').disabled = true;
+
+    checkTradeComplete();
+  }
+
+  function vpPass() {
+    if (vpPassesLeft <= 0) { showToast(t('toast-vp-no-pass')); return; }
+    vpPassesLeft--;
+    document.getElementById('vp-pass-count').textContent = vpPassesLeft;
+    vpSelectedCards.push(vpCurrentCard);
+    showVpCard();
+  }
+
+  function vpKeep() {
+    const cards = document.querySelectorAll('#vp-hand .hand-card');
+    const selected = [...cards].filter(c => c.classList.contains('selected'));
+    if (selected.length !== 1) { showToast(t('toast-need-select-1')); return; }
+
+    vpKept = vpCurrentCard;
+    vpKeptDone = true;
+
+    document.querySelectorAll('#vp-hand .hand-card').forEach(c => c.classList.add('locked'));
+    document.getElementById('btn-vp-keep').disabled = true;
+    document.getElementById('btn-vp-pass').disabled = true;
+
+    checkTradeComplete();
+  }
+
+  function checkTradeComplete() {
+    if (!presKeptDone || !vpKeptDone) return;
+
+    // Show summary
+    const summary = document.getElementById('trade-summary');
+    const content = document.getElementById('trade-summary-content');
+    const presPlayer = PLAYERS.find(p => roles[p.id] === 'president');
+    const vpPlayer   = PLAYERS.find(p => roles[p.id] === 'vp');
+
+    const keptLabel = t('kept-label');
+    const presCards = presKept ? presKept.map(c => `${c.rank}${c.suit}`).join(', ') : '—';
+    const vpCard    = vpKept ? `${vpKept.rank}${vpKept.suit}` : '—';
+
+    content.innerHTML = `
+      <div class="trade-summary-row">
+        <span>${presPlayer?.name || '—'} <span style="color:var(--gold-dim)">(${t('role-president')})</span></span>
+        <span class="trade-arrow">→</span>
+        <span style="font-family:'Cinzel',serif;color:var(--gold);font-size:0.8rem;">${presCards}</span>
+      </div>
+      <div class="trade-summary-row">
+        <span>${vpPlayer?.name || '—'} <span style="color:#a0c4ff">(${t('role-vp')})</span></span>
+        <span class="trade-arrow">→</span>
+        <span style="font-family:'Cinzel',serif;color:var(--gold);font-size:0.8rem;">${vpCard}</span>
+      </div>
+    `;
+
+    document.getElementById('trade-summary-title').textContent = t('trade-summary-title');
+    summary.classList.add('visible');
+    document.getElementById('btn-next-2').disabled = false;
+  }
+
+  // ══════════════════════════════
+  // TOAST
+  // ══════════════════════════════
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  // ══════════════════════════════
+  // INIT
+  // ══════════════════════════════
+  initDrawScreen();
+  </script>
+</body>
+</html>

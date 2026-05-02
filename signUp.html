@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Crypt — Inscription</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8cc7a;
+      --gold-dim: #7a5f28;
+      --bg-deep: #0a0705;
+      --bg-card: #110e09;
+      --bg-mid: #1a1409;
+      --text: #e8ddc8;
+      --text-dim: #9a8a6a;
+      --red: #8b1a1a;
+      --error: #c0392b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ── Language selector ── */
+    .lang-selector {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.8rem;
+      z-index: 100;
+      display: flex;
+      gap: 0.4rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
+    .lang-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-dim);
+      padding: 0.25rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.07);
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.8rem;
+      z-index: 100;
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.25s;
+    }
+    .back-link:hover { color: var(--gold); }
+
+    /* ── Page layout ── */
+    .page-layout {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Left panel — decorative ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 3rem;
+      position: relative;
+      border-right: 1px solid rgba(201,168,76,0.08);
+      background: linear-gradient(135deg, var(--bg-deep) 0%, #0e0b06 100%);
+      overflow: hidden;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px; height: 500px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.05) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* Deck of cards stacked illustration */
+    .deck-wrapper {
+      position: relative;
+      width: 200px;
+      height: 240px;
+    }
+
+    .deck-card {
+      position: absolute;
+      width: 120px;
+      height: 168px;
+      border-radius: 7px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: var(--bg-card);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .deck-card:nth-child(1) {
+      left: 0px; top: 40px;
+      transform: rotate(-12deg);
+      border-color: rgba(201,168,76,0.2);
+      animation: cardFloat1 6s ease-in-out infinite;
+    }
+    .deck-card:nth-child(2) {
+      left: 20px; top: 20px;
+      transform: rotate(-5deg);
+      border-color: rgba(201,168,76,0.3);
+      animation: cardFloat2 6s ease-in-out infinite;
+    }
+    .deck-card:nth-child(3) {
+      left: 40px; top: 5px;
+      transform: rotate(2deg);
+      border-color: rgba(201,168,76,0.5);
+      animation: cardFloat3 6s ease-in-out infinite;
+    }
+
+    /* Top card — fully rendered */
+    .deck-card:nth-child(3)::before {
+      content: 'A';
+      position: absolute;
+      top: 8px; left: 10px;
+      font-family: Georgia, serif;
+      font-size: 18px;
+      color: var(--gold);
+      font-weight: bold;
+    }
+    .deck-card:nth-child(3)::after {
+      content: '♠';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 52px;
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+
+    /* Plus sign floating */
+    .plus-sign {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2.5rem;
+      color: var(--gold);
+      opacity: 0.4;
+      font-family: 'Cinzel', serif;
+      animation: plusPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes cardFloat1 {
+      0%, 100% { transform: rotate(-12deg) translateY(0); }
+      50%       { transform: rotate(-14deg) translateY(-6px); }
+    }
+    @keyframes cardFloat2 {
+      0%, 100% { transform: rotate(-5deg) translateY(0); }
+      50%       { transform: rotate(-6deg) translateY(-8px); }
+    }
+    @keyframes cardFloat3 {
+      0%, 100% { transform: rotate(2deg) translateY(0); }
+      50%       { transform: rotate(1deg) translateY(-10px); }
+    }
+    @keyframes plusPulse {
+      0%, 100% { opacity: 0.3; transform: translateY(-50%) scale(1); }
+      50%       { opacity: 0.6; transform: translateY(-50%) scale(1.1); }
+    }
+
+    .left-caption {
+      margin-top: 3rem;
+      text-align: center;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--text-dim);
+      opacity: 0.7;
+      line-height: 1.7;
+      max-width: 260px;
+    }
+
+    /* ── Right panel — form ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 4rem;
+      background: var(--bg-card);
+    }
+
+    .form-logo {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+
+    .form-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.15em;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+
+    .form-subtitle {
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      margin-bottom: 2.2rem;
+      text-align: center;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 1.8rem;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .divider-diamond {
+      width: 5px; height: 5px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* ── Form ── */
+    .signup-form {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .field-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      background: rgba(201,168,76,0.03);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-bottom-color: rgba(201,168,76,0.3);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: all 0.3s;
+      width: 100%;
+    }
+    .field-input::placeholder { color: var(--text-dim); opacity: 0.4; }
+    .field-input:focus {
+      border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.05);
+      box-shadow: 0 2px 12px rgba(201,168,76,0.06);
+    }
+    .field-input.error {
+      border-color: var(--error);
+      box-shadow: 0 0 8px rgba(192,57,43,0.15);
+    }
+
+    .field-hint {
+      font-size: 0.78rem;
+      font-style: italic;
+      color: var(--error);
+      opacity: 0;
+      transition: opacity 0.3s;
+      min-height: 1rem;
+    }
+    .field-hint.visible { opacity: 1; }
+
+    /* Password strength bar */
+    .strength-bar-wrapper {
+      height: 3px;
+      background: rgba(201,168,76,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.2rem;
+    }
+    .strength-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 2px;
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      display: block;
+      text-decoration: none;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn:hover::after { opacity: 1; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2a1f08, #4a3410);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-dim);
+      box-shadow: 0 0 20px rgba(201,168,76,0.08);
+      margin-top: 0.4rem;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3a2c0e, #5e4318);
+      border-color: var(--gold);
+      box-shadow: 0 0 28px rgba(201,168,76,0.18);
+      transform: translateY(-1px);
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-style: italic;
+      opacity: 0.6;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(201,168,76,0.12);
+    }
+
+    .btn-google {
+      background: rgba(255,255,255,0.03);
+      color: var(--text-dim);
+      border: 1px solid rgba(201,168,76,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      font-size: 0.72rem;
+    }
+    .btn-google:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--gold-dim);
+      color: var(--text);
+    }
+
+    .google-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .form-footer {
+      margin-top: 1.6rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .form-footer a {
+      color: var(--gold-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+      border-bottom: 1px solid transparent;
+    }
+    .form-footer a:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold-dim);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .page-layout { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 5rem 2rem 3rem; min-height: 100vh; }
+    }
+
+    /* ── Entry animation ── */
+    .right-panel > * {
+      animation: fadeInUp 0.7s ease both;
+    }
+    .right-panel > *:nth-child(1) { animation-delay: 0.05s; }
+    .right-panel > *:nth-child(2) { animation-delay: 0.10s; }
+    .right-panel > *:nth-child(3) { animation-delay: 0.15s; }
+    .right-panel > *:nth-child(4) { animation-delay: 0.20s; }
+    .right-panel > *:nth-child(5) { animation-delay: 0.25s; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-mid);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      padding: 0.8rem 1.8rem;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">← <span id="back-text">Accueil</span></a>
+
+  <div class="lang-selector">
+    <button class="lang-btn active" onclick="setLang('fr')">Français</button>
+    <button class="lang-btn" onclick="setLang('en')">English</button>
+  </div>
+
+  <div class="page-layout">
+
+    <!-- LEFT — stacked cards illustration -->
+    <div class="left-panel">
+      <div class="deck-wrapper">
+        <div class="deck-card"></div>
+        <div class="deck-card"></div>
+        <div class="deck-card"></div>
+        <div class="plus-sign">+</div>
+      </div>
+      <p class="left-caption" id="left-caption">
+        Rejoignez la crypte.<br>Votre siège vous attend.
+      </p>
+    </div>
+
+    <!-- RIGHT — form -->
+    <div class="right-panel">
+      <div class="form-logo">Card Crypt</div>
+      <h1 class="form-title" id="form-title">Inscription</h1>
+      <p class="form-subtitle" id="form-subtitle">Créez votre place à la table</p>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-diamond"></div>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="signup-form">
+
+        <div class="field-group">
+          <label class="field-label" id="label-email">Courriel</label>
+          <input class="field-input" id="input-email" type="email" placeholder="votre@courriel.com" oninput="clearError('input-email','hint-email')" />
+          <span class="field-hint" id="hint-email"></span>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" id="label-password">Mot de passe</label>
+          <input class="field-input" id="input-password" type="password" placeholder="••••••••" oninput="updateStrength()" />
+          <div class="strength-bar-wrapper">
+            <div class="strength-bar" id="strength-bar"></div>
+          </div>
+          <span class="field-hint" id="hint-password"></span>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" id="label-confirm">Confirmer le mot de passe</label>
+          <input class="field-input" id="input-confirm" type="password" placeholder="••••••••" oninput="clearError('input-confirm','hint-confirm')" />
+          <span class="field-hint" id="hint-confirm"></span>
+        </div>
+
+        <button class="btn btn-primary" id="btn-signup" onclick="handleSignUp()">
+          S'inscrire
+        </button>
+
+        <div class="or-divider"><span id="or-text">ou</span></div>
+
+        <button class="btn btn-google" id="btn-google" onclick="handleGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span id="google-text">S'inscrire avec Google</span>
+        </button>
+      </div>
+
+      <p class="form-footer">
+        <span id="footer-text">Déjà un compte ?</span>
+        <a href="signIn.html" id="signin-link"> Se connecter</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const translations = {
+      fr: {
+        'back-text': 'Accueil',
+        'form-title': 'Inscription',
+        'form-subtitle': 'Créez votre place à la table',
+        'left-caption': 'Rejoignez la crypte.\nVotre siège vous attend.',
+        'label-email': 'Courriel',
+        'placeholder-email': 'votre@courriel.com',
+        'label-password': 'Mot de passe',
+        'placeholder-password': '••••••••',
+        'label-confirm': 'Confirmer le mot de passe',
+        'btn-signup': "S'inscrire",
+        'or-text': 'ou',
+        'google-text': "S'inscrire avec Google",
+        'footer-text': 'Déjà un compte ?',
+        'signin-link': 'Se connecter',
+        'err-email': 'Veuillez entrer un courriel valide.',
+        'err-password': 'Minimum 6 caractères.',
+        'err-confirm': 'Les mots de passe ne correspondent pas.',
+        'err-empty': 'Veuillez remplir tous les champs.',
+        'toast-ok': 'Compte créé — bienvenue !',
+        'toast-google': 'Google Sign-Up — à connecter avec Firebase',
+        'strength-weak': 'Faible',
+        'strength-medium': 'Moyen',
+        'strength-strong': 'Fort',
+      },
+      en: {
+        'back-text': 'Home',
+        'form-title': 'Sign Up',
+        'form-subtitle': 'Create your seat at the table',
+        'left-caption': 'Join the crypt.\nYour seat awaits.',
+        'label-email': 'Email',
+        'placeholder-email': 'your@email.com',
+        'label-password': 'Password',
+        'placeholder-password': '••••••••',
+        'label-confirm': 'Confirm Password',
+        'btn-signup': 'Sign Up',
+        'or-text': 'or',
+        'google-text': 'Sign up with Google',
+        'footer-text': 'Already have an account?',
+        'signin-link': 'Sign In',
+        'err-email': 'Please enter a valid email.',
+        'err-password': 'Minimum 6 characters.',
+        'err-confirm': 'Passwords do not match.',
+        'err-empty': 'Please fill in all fields.',
+        'toast-ok': 'Account created — welcome!',
+        'toast-google': 'Google Sign-Up — connect with Firebase',
+        'strength-weak': 'Weak',
+        'strength-medium': 'Medium',
+        'strength-strong': 'Strong',
+      }
+    };
+
+    let currentLang = 'fr';
+
+    function setLang(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+      document.getElementById('back-text').textContent = t['back-text'];
+      document.getElementById('form-title').textContent = t['form-title'];
+      document.getElementById('form-subtitle').textContent = t['form-subtitle'];
+      document.getElementById('left-caption').innerHTML = t['left-caption'].replace('\n', '<br>');
+      document.getElementById('label-email').textContent = t['label-email'];
+      document.getElementById('input-email').placeholder = t['placeholder-email'];
+      document.getElementById('label-password').textContent = t['label-password'];
+      document.getElementById('input-password').placeholder = t['placeholder-password'];
+      document.getElementById('label-confirm').textContent = t['label-confirm'];
+      document.getElementById('input-confirm').placeholder = t['placeholder-password'];
+      document.getElementById('btn-signup').textContent = t['btn-signup'];
+      document.getElementById('or-text').textContent = t['or-text'];
+      document.getElementById('google-text').textContent = t['google-text'];
+      document.getElementById('footer-text').textContent = t['footer-text'];
+      document.getElementById('signin-link').textContent = ' ' + t['signin-link'];
+    }
+
+    function updateStrength() {
+      const pw = document.getElementById('input-password').value;
+      const bar = document.getElementById('strength-bar');
+      clearError('input-password', 'hint-password');
+
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+      const t = translations[currentLang];
+      if (pw.length === 0) { bar.style.width = '0%'; return; }
+
+      if (score <= 2) {
+        bar.style.width = '33%';
+        bar.style.background = '#c0392b';
+      } else if (score <= 3) {
+        bar.style.width = '66%';
+        bar.style.background = '#c9a84c';
+      } else {
+        bar.style.width = '100%';
+        bar.style.background = '#27ae60';
+      }
+    }
+
+    function showError(inputId, hintId, msg) {
+      document.getElementById(inputId).classList.add('error');
+      const hint = document.getElementById(hintId);
+      hint.textContent = msg;
+      hint.classList.add('visible');
+    }
+
+    function clearError(inputId, hintId) {
+      document.getElementById(inputId).classList.remove('error');
+      const hint = document.getElementById(hintId);
+      hint.textContent = '';
+      hint.classList.remove('visible');
+    }
+
+    function handleSignUp() {
+      const t = translations[currentLang];
+      const email = document.getElementById('input-email').value.trim();
+      const pw = document.getElementById('input-password').value;
+      const confirm = document.getElementById('input-confirm').value;
+
+      let valid = true;
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('input-email', 'hint-email', t['err-email']);
+        valid = false;
+      }
+      if (pw.length < 6) {
+        showError('input-password', 'hint-password', t['err-password']);
+        valid = false;
+      }
+      if (pw !== confirm) {
+        showError('input-confirm', 'hint-confirm', t['err-confirm']);
+        valid = false;
+      }
+      if (!valid) return;
+
+      showToast(t['toast-ok']);
+      // TODO: Firebase createUserWithEmailAndPassword
+    }
+
+    function handleGoogle() {
+      const t = translations[currentLang];
+      showToast(t['toast-google']);
+      // TODO: Firebase Google auth
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

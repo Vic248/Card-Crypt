@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Crypt — Bibliothèque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8cc7a;
+      --gold-dim: #7a5f28;
+      --bg-deep: #0a0705;
+      --bg-card: #110e09;
+      --bg-mid: #1a1409;
+      --bg-hover: #1e1609;
+      --text: #e8ddc8;
+      --text-dim: #9a8a6a;
+      --red: #8b1a1a;
+      --red-bright: #a83232;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ══════════════════════════════
+       NAVBAR
+    ══════════════════════════════ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10,7,5,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      padding: 0 2.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar-logo {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 1.05rem;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .lang-selector {
+      display: flex;
+      gap: 0.3rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+    }
+    .lang-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-dim);
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.07);
+    }
+
+    .nav-divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(201,168,76,0.15);
+    }
+
+    .nav-user {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .nav-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-dim);
+      background: var(--bg-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--gold);
+    }
+
+    .nav-signout {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      background: none;
+      border: 1px solid rgba(201,168,76,0.15);
+      padding: 0.2rem 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-signout:hover {
+      border-color: var(--gold-dim);
+      color: var(--text);
+    }
+
+    /* ══════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════ */
+    .main {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3.5rem 2.5rem 6rem;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      margin-bottom: 2.5rem;
+      animation: fadeInDown 0.6s ease both;
+    }
+
+    .page-header-top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .page-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .page-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      letter-spacing: 0.1em;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* ── Search bar ── */
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      animation: fadeInDown 0.6s ease 0.1s both;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(201,168,76,0.03);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-bottom-color: rgba(201,168,76,0.35);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      padding: 0.75rem 1rem 0.75rem 2.8rem;
+      outline: none;
+      transition: all 0.3s;
+      letter-spacing: 0.03em;
+    }
+    .search-input::placeholder { color: var(--text-dim); opacity: 0.45; }
+    .search-input:focus {
+      border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.04);
+      box-shadow: 0 4px 20px rgba(201,168,76,0.06);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold-dim);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      padding: 0;
+      line-height: 1;
+    }
+    .search-clear.visible { opacity: 0.5; }
+    .search-clear:hover { opacity: 1; }
+
+    /* Gold divider */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      animation: fadeInDown 0.6s ease 0.15s both;
+    }
+    .section-divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(201,168,76,0.3), transparent);
+    }
+    .section-divider-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.25em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════
+       GAME GRID
+    ══════════════════════════════ */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.4rem;
+    }
+
+    /* ── Game card ── */
+    .game-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.1);
+      cursor: pointer;
+      transition: all 0.35s ease;
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+      animation: cardReveal 0.5s ease both;
+    }
+
+    .game-card:nth-child(1) { animation-delay: 0.05s; }
+    .game-card:nth-child(2) { animation-delay: 0.10s; }
+    .game-card:nth-child(3) { animation-delay: 0.15s; }
+    .game-card:nth-child(4) { animation-delay: 0.20s; }
+    .game-card:nth-child(5) { animation-delay: 0.25s; }
+    .game-card:nth-child(6) { animation-delay: 0.30s; }
+    .game-card:nth-child(7) { animation-delay: 0.35s; }
+    .game-card:nth-child(8) { animation-delay: 0.40s; }
+
+    @keyframes cardReveal {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    .game-card:hover {
+      border-color: rgba(201,168,76,0.35);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.08);
+    }
+    .game-card:hover::before { opacity: 1; }
+
+    /* Card illustration area */
+    .game-card-art {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(201,168,76,0.07);
+    }
+
+    /* Coming soon cards — dimmed */
+    .game-card.coming-soon {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+    .game-card.coming-soon:hover {
+      transform: none;
+      border-color: rgba(201,168,76,0.1);
+      box-shadow: none;
+    }
+
+    /* ── Card info ── */
+    .game-card-body {
+      padding: 1rem 1.1rem 1.2rem;
+    }
+
+    .game-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    .game-card-desc {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: var(--text-dim);
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+    }
+
+    .game-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .game-card-players {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--gold-dim);
+    }
+
+    .game-card-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid;
+      text-transform: uppercase;
+    }
+
+    .badge-available {
+      color: var(--gold);
+      border-color: rgba(201,168,76,0.3);
+      background: rgba(201,168,76,0.06);
+    }
+
+    .badge-soon {
+      color: var(--text-dim);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    /* ── Top-left corner accent on art ── */
+    .art-corner {
+      position: absolute;
+      top: 8px; left: 8px;
+      width: 20px; height: 20px;
+      border-top: 1px solid rgba(201,168,76,0.3);
+      border-left: 1px solid rgba(201,168,76,0.3);
+    }
+    .art-corner-br {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      width: 20px; height: 20px;
+      border-bottom: 1px solid rgba(201,168,76,0.3);
+      border-right: 1px solid rgba(201,168,76,0.3);
+    }
+
+    /* ══════════════════════════════
+       SVG ILLUSTRATIONS per game
+    ══════════════════════════════ */
+
+    /* Joffe — fan of cards */
+    .art-joffe {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    /* TDC — hierarchy pyramid */
+    .art-tdc {
+      position: relative;
+    }
+
+    /* No results */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 1.1rem;
+      display: none;
+    }
+    .no-results.visible { display: block; }
+
+    /* ══════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════ */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-mid);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      padding: 0.8rem 1.8rem;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.4s ease;
+      white-space: nowrap;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .main { padding: 2rem 1.2rem 4rem; }
+      .navbar { padding: 0 1.2rem; }
+      .page-header-top { flex-direction: column; align-items: flex-start; }
+      .search-wrapper { max-width: 100%; }
+      .games-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-logo">Card Crypt</a>
+    <div class="navbar-right">
+      <div class="lang-selector">
+        <button class="lang-btn active" onclick="setLang('fr')">Français</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-user">
+        <div class="nav-avatar">V</div>
+        <span id="nav-username">Victorino</span>
+      </div>
+      <button class="nav-signout" id="btn-signout" onclick="handleSignOut()">↩ Déconnexion</button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <div class="page-header">
+      <div class="page-header-top">
+        <div>
+          <p class="page-eyebrow" id="eyebrow">Bibliothèque de jeux</p>
+          <h1 class="page-title" id="page-title">Choisissez votre jeu</h1>
+        </div>
+        <div class="search-wrapper">
+          <span class="search-icon">♦</span>
+          <input
+            class="search-input"
+            id="search-input"
+            type="text"
+            placeholder="Rechercher un jeu..."
+            oninput="handleSearch(this.value)"
+          />
+          <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <span class="section-divider-label" id="divider-label">Jeux disponibles</span>
+      <div class="section-divider-line" style="background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3));"></div>
+    </div>
+
+    <!-- ── GAMES GRID ── -->
+    <div class="games-grid" id="games-grid">
+
+      <!-- Joffe -->
+      <a href="joffeLobby.html" class="game-card" data-name="joffe" data-name-en="joffe">
+        <div class="game-card-art" style="background: linear-gradient(135deg, #0e0b06 0%, #150f07 100%);">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <!-- Fan of cards SVG -->
+          <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
+            <!-- Card 1 — far left -->
+            <g transform="rotate(-30 55 80)">
+              <rect x="30" y="20" width="50" height="70" rx="4" fill="#110e09" stroke="rgba(201,168,76,0.35)" stroke-width="1"/>
+              <text x="37" y="35" font-size="10" fill="rgba(201,168,76,0.6)" font-family="Georgia,serif">7</text>
+              <text x="55" y="62" font-size="18" fill="rgba(139,26,26,0.5)" font-family="Georgia,serif" text-anchor="middle">♦</text>
+            </g>
+            <!-- Card 2 — left -->
+            <g transform="rotate(-15 55 80)">
+              <rect x="30" y="20" width="50" height="70" rx="4" fill="#110e09" stroke="rgba(201,168,76,0.45)" stroke-width="1"/>
+              <text x="37" y="35" font-size="10" fill="rgba(201,168,76,0.7)" font-family="Georgia,serif">J</text>
+              <text x="55" y="62" font-size="18" fill="rgba(201,168,76,0.45)" font-family="Georgia,serif" text-anchor="middle">♣</text>
+            </g>
+            <!-- Card 3 — center (top) -->
+            <g transform="rotate(0 55 80)">
+              <rect x="30" y="20" width="50" height="70" rx="4" fill="#150f07" stroke="rgba(201,168,76,0.65)" stroke-width="1.2"/>
+              <text x="37" y="35" font-size="10" fill="#c9a84c" font-family="Georgia,serif" font-weight="bold">A</text>
+              <text x="55" y="62" font-size="22" fill="rgba(139,26,26,0.8)" font-family="Georgia,serif" text-anchor="middle">♥</text>
+            </g>
+            <!-- Card 4 — right -->
+            <g transform="rotate(15 55 80)">
+              <rect x="30" y="20" width="50" height="70" rx="4" fill="#110e09" stroke="rgba(201,168,76,0.45)" stroke-width="1"/>
+              <text x="37" y="35" font-size="10" fill="rgba(201,168,76,0.7)" font-family="Georgia,serif">K</text>
+              <text x="55" y="62" font-size="18" fill="rgba(201,168,76,0.45)" font-family="Georgia,serif" text-anchor="middle">♠</text>
+            </g>
+            <!-- Card 5 — far right -->
+            <g transform="rotate(30 55 80)">
+              <rect x="30" y="20" width="50" height="70" rx="4" fill="#110e09" stroke="rgba(201,168,76,0.35)" stroke-width="1"/>
+              <text x="37" y="35" font-size="10" fill="rgba(201,168,76,0.5)" font-family="Georgia,serif">Q</text>
+              <text x="55" y="62" font-size="18" fill="rgba(139,26,26,0.4)" font-family="Georgia,serif" text-anchor="middle">♥</text>
+            </g>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" id="name-joffe">Joffre</div>
+          <div class="game-card-desc" id="desc-joffe">Jeu de plis classique par équipes</div>
+          <div class="game-card-meta">
+            <span class="game-card-players" id="players-joffe">2 – 6 joueurs</span>
+            <span class="game-card-badge badge-available" id="badge-joffe">Disponible</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Trou du Cul -->
+      <a href="tdc.html" class="game-card" data-name="trou du cul tdc" data-name-en="asshole president tdc">
+        <div class="game-card-art" style="background: linear-gradient(135deg, #0d0806 0%, #130a07 100%);">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <!-- Hierarchy pyramid SVG -->
+          <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
+            <!-- Crown (President) -->
+            <g>
+              <rect x="38" y="12" width="34" height="22" rx="3" fill="#1a1007" stroke="#c9a84c" stroke-width="1"/>
+              <text x="55" y="27" font-size="9" fill="#c9a84c" font-family="Georgia,serif" text-anchor="middle" font-weight="bold">♛</text>
+            </g>
+            <!-- VP row -->
+            <g>
+              <rect x="18" y="40" width="32" height="20" rx="3" fill="#150e06" stroke="rgba(201,168,76,0.5)" stroke-width="0.8"/>
+              <text x="34" y="53" font-size="8" fill="rgba(201,168,76,0.7)" font-family="Georgia,serif" text-anchor="middle">VP</text>
+              <rect x="60" y="40" width="32" height="20" rx="3" fill="#150e06" stroke="rgba(201,168,76,0.5)" stroke-width="0.8"/>
+              <text x="76" y="53" font-size="7" fill="rgba(201,168,76,0.7)" font-family="Georgia,serif" text-anchor="middle">SEC</text>
+            </g>
+            <!-- Bottom row -->
+            <g>
+              <rect x="5" y="68" width="28" height="18" rx="3" fill="#110e09" stroke="rgba(201,168,76,0.25)" stroke-width="0.6"/>
+              <text x="19" y="80" font-size="7" fill="rgba(201,168,76,0.4)" font-family="Georgia,serif" text-anchor="middle">JAN</text>
+              <rect x="40" y="68" width="30" height="18" rx="3" fill="#110e09" stroke="rgba(201,168,76,0.25)" stroke-width="0.6"/>
+              <text x="55" y="80" font-size="6" fill="rgba(201,168,76,0.35)" font-family="Georgia,serif" text-anchor="middle">V.TDC</text>
+              <rect x="77" y="68" width="28" height="18" rx="3" fill="#110e09" stroke="rgba(139,26,26,0.4)" stroke-width="0.6"/>
+              <text x="91" y="80" font-size="6" fill="rgba(139,26,26,0.6)" font-family="Georgia,serif" text-anchor="middle">TDC</text>
+            </g>
+            <!-- Connector lines -->
+            <line x1="55" y1="34" x2="34" y2="40" stroke="rgba(201,168,76,0.2)" stroke-width="0.5"/>
+            <line x1="55" y1="34" x2="76" y2="40" stroke="rgba(201,168,76,0.2)" stroke-width="0.5"/>
+            <line x1="34" y1="60" x2="19" y2="68" stroke="rgba(201,168,76,0.15)" stroke-width="0.5"/>
+            <line x1="55" y1="60" x2="55" y2="68" stroke="rgba(201,168,76,0.15)" stroke-width="0.5"/>
+            <line x1="76" y1="60" x2="91" y2="68" stroke="rgba(201,168,76,0.15)" stroke-width="0.5"/>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" id="name-tdc">Trou du Cul</div>
+          <div class="game-card-desc" id="desc-tdc">Grimpez la hiérarchie, évitez le fond</div>
+          <div class="game-card-meta">
+            <span class="game-card-players" id="players-tdc">3 – 6 joueurs</span>
+            <span class="game-card-badge badge-available" id="badge-tdc">Disponible</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Coming soon slots -->
+      <div class="game-card coming-soon" data-name="__hidden__">
+        <div class="game-card-art" style="background: #0c0906;">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="20" stroke="rgba(201,168,76,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="30" y="36" font-size="20" fill="rgba(201,168,76,0.12)" text-anchor="middle" font-family="Georgia,serif">?</text>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" style="color:var(--text-dim);" id="name-soon1">À venir</div>
+          <div class="game-card-desc" id="desc-soon1">Prochain jeu en développement</div>
+          <div class="game-card-meta">
+            <span class="game-card-players">—</span>
+            <span class="game-card-badge badge-soon" id="badge-soon">Bientôt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card coming-soon" data-name="__hidden__">
+        <div class="game-card-art" style="background: #0c0906;">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="20" stroke="rgba(201,168,76,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="30" y="36" font-size="20" fill="rgba(201,168,76,0.12)" text-anchor="middle" font-family="Georgia,serif">?</text>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" style="color:var(--text-dim);">À venir</div>
+          <div class="game-card-desc">Prochain jeu en développement</div>
+          <div class="game-card-meta">
+            <span class="game-card-players">—</span>
+            <span class="game-card-badge badge-soon">Bientôt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card coming-soon" data-name="__hidden__">
+        <div class="game-card-art" style="background: #0c0906;">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="20" stroke="rgba(201,168,76,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="30" y="36" font-size="20" fill="rgba(201,168,76,0.12)" text-anchor="middle" font-family="Georgia,serif">?</text>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" style="color:var(--text-dim);">À venir</div>
+          <div class="game-card-desc">Prochain jeu en développement</div>
+          <div class="game-card-meta">
+            <span class="game-card-players">—</span>
+            <span class="game-card-badge badge-soon">Bientôt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card coming-soon" data-name="__hidden__">
+        <div class="game-card-art" style="background: #0c0906;">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="20" stroke="rgba(201,168,76,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="30" y="36" font-size="20" fill="rgba(201,168,76,0.12)" text-anchor="middle" font-family="Georgia,serif">?</text>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" style="color:var(--text-dim);">À venir</div>
+          <div class="game-card-desc">Prochain jeu en développement</div>
+          <div class="game-card-meta">
+            <span class="game-card-players">—</span>
+            <span class="game-card-badge badge-soon">Bientôt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-card coming-soon" data-name="__hidden__">
+        <div class="game-card-art" style="background: #0c0906;">
+          <div class="art-corner"></div>
+          <div class="art-corner-br"></div>
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="20" stroke="rgba(201,168,76,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="30" y="36" font-size="20" fill="rgba(201,168,76,0.12)" text-anchor="middle" font-family="Georgia,serif">?</text>
+          </svg>
+        </div>
+        <div class="game-card-body">
+          <div class="game-card-name" style="color:var(--text-dim);">À venir</div>
+          <div class="game-card-desc">Prochain jeu en développement</div>
+          <div class="game-card-meta">
+            <span class="game-card-players">—</span>
+            <span class="game-card-badge badge-soon">Bientôt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No results message -->
+      <div class="no-results" id="no-results">
+        <p id="no-results-text">Aucun jeu trouvé pour "<span id="no-results-query"></span>"</p>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const translations = {
+      fr: {
+        eyebrow: 'Bibliothèque de jeux',
+        'page-title': 'Choisissez votre jeu',
+        'search-placeholder': 'Rechercher un jeu...',
+        'divider-label': 'Jeux disponibles',
+        'btn-signout': '↩ Déconnexion',
+        'name-joffe': 'Joffre',
+        'desc-joffe': 'Jeu de plis classique par équipes',
+        'players-joffe': '2 – 6 joueurs',
+        'badge-joffe': 'Disponible',
+        'name-tdc': 'Trou du Cul',
+        'desc-tdc': 'Grimpez la hiérarchie, évitez le fond',
+        'players-tdc': '3 – 6 joueurs',
+        'badge-tdc': 'Disponible',
+        'name-soon1': 'À venir',
+        'desc-soon1': 'Prochain jeu en développement',
+        'badge-soon': 'Bientôt',
+        'no-results': 'Aucun jeu trouvé pour',
+        'toast-signout': 'Déconnexion...',
+      },
+      en: {
+        eyebrow: 'Game Library',
+        'page-title': 'Choose your game',
+        'search-placeholder': 'Search a game...',
+        'divider-label': 'Available games',
+        'btn-signout': '↩ Sign Out',
+        'name-joffe': 'Joffre',
+        'desc-joffe': 'Classic trick-taking team game',
+        'players-joffe': '2 – 6 players',
+        'badge-joffe': 'Available',
+        'name-tdc': 'Asshole',
+        'desc-tdc': 'Climb the hierarchy, avoid the bottom',
+        'players-tdc': '3 – 6 players',
+        'badge-tdc': 'Available',
+        'name-soon1': 'Coming Soon',
+        'desc-soon1': 'Next game in development',
+        'badge-soon': 'Soon',
+        'no-results': 'No game found for',
+        'toast-signout': 'Signing out...',
+      }
+    };
+
+    let currentLang = 'fr';
+
+    function setLang(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+      document.getElementById('eyebrow').textContent = t['eyebrow'];
+      document.getElementById('page-title').textContent = t['page-title'];
+      document.getElementById('search-input').placeholder = t['search-placeholder'];
+      document.getElementById('divider-label').textContent = t['divider-label'];
+      document.getElementById('btn-signout').textContent = t['btn-signout'];
+      document.getElementById('name-joffe').textContent = t['name-joffe'];
+      document.getElementById('desc-joffe').textContent = t['desc-joffe'];
+      document.getElementById('players-joffe').textContent = t['players-joffe'];
+      document.getElementById('badge-joffe').textContent = t['badge-joffe'];
+      document.getElementById('name-tdc').textContent = t['name-tdc'];
+      document.getElementById('desc-tdc').textContent = t['desc-tdc'];
+      document.getElementById('players-tdc').textContent = t['players-tdc'];
+      document.getElementById('badge-tdc').textContent = t['badge-tdc'];
+      document.getElementById('name-soon1').textContent = t['name-soon1'];
+      document.getElementById('desc-soon1').textContent = t['desc-soon1'];
+      document.querySelectorAll('.badge-soon').forEach(b => b.textContent = t['badge-soon']);
+    }
+
+    // ── Search ──
+    function handleSearch(val) {
+      const clear = document.getElementById('search-clear');
+      clear.classList.toggle('visible', val.length > 0);
+
+      const query = val.toLowerCase().trim();
+      const cards = document.querySelectorAll('.game-card:not(.coming-soon)');
+      let found = 0;
+
+      cards.forEach(card => {
+        const name = (card.dataset.name + ' ' + (card.dataset.nameEn || '')).toLowerCase();
+        const match = !query || name.includes(query);
+        card.style.display = match ? 'block' : 'none';
+        if (match) found++;
+      });
+
+      const noResults = document.getElementById('no-results');
+      const querySpan = document.getElementById('no-results-query');
+      if (found === 0 && query) {
+        querySpan.textContent = val;
+        noResults.classList.add('visible');
+      } else {
+        noResults.classList.remove('visible');
+      }
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      handleSearch('');
+      input.focus();
+    }
+
+    function handleSignOut() {
+      const t = translations[currentLang];
+      showToast(t['toast-signout']);
+      setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

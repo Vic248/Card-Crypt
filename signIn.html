@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Crypt — Connexion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8cc7a;
+      --gold-dim: #7a5f28;
+      --bg-deep: #0a0705;
+      --bg-card: #110e09;
+      --bg-mid: #1a1409;
+      --text: #e8ddc8;
+      --text-dim: #9a8a6a;
+      --red: #8b1a1a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ── Language selector ── */
+    .lang-selector {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.8rem;
+      z-index: 100;
+      display: flex;
+      gap: 0.4rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
+    .lang-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-dim);
+      padding: 0.25rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      font-size: inherit;
+      letter-spacing: inherit;
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.07);
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.8rem;
+      z-index: 100;
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .back-link:hover { color: var(--gold); }
+
+    /* ── Main layout — two columns ── */
+    .page-layout {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Left panel — illustration ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 3rem;
+      position: relative;
+      border-right: 1px solid rgba(201,168,76,0.08);
+      background: linear-gradient(135deg, var(--bg-deep) 0%, #0e0b06 100%);
+      overflow: hidden;
+    }
+
+    /* Subtle radial glow */
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.05) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* ── Dematerializing card SVG animation ── */
+    .card-anim-wrapper {
+      position: relative;
+      width: 260px;
+      height: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* The card itself */
+    .card-svg {
+      position: absolute;
+      width: 160px;
+      height: 220px;
+      animation: cardFade 4s ease-in-out infinite;
+    }
+
+    @keyframes cardFade {
+      0%, 100% { opacity: 1; filter: blur(0px); }
+      60%       { opacity: 0.15; filter: blur(2px); }
+      80%       { opacity: 0.4; filter: blur(0px); }
+    }
+
+    /* Pixel/particle field */
+    .particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .px {
+      position: absolute;
+      background: var(--gold);
+      animation: pixelFloat linear infinite;
+      opacity: 0;
+      border-radius: 1px;
+    }
+
+    @keyframes pixelFloat {
+      0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+      15%  { opacity: var(--op); }
+      85%  { opacity: var(--op); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+    }
+
+    /* Generate many particles via nth-child */
+    .px:nth-child(1)  { width:4px;height:4px; left:52%; top:30%; --op:.7; --dx:40px;  --dy:-60px; animation-duration:3.2s; animation-delay:0s; }
+    .px:nth-child(2)  { width:3px;height:3px; left:45%; top:40%; --op:.5; --dx:-50px; --dy:-40px; animation-duration:2.8s; animation-delay:0.4s; }
+    .px:nth-child(3)  { width:5px;height:5px; left:58%; top:50%; --op:.6; --dx:60px;  --dy:20px;  animation-duration:3.5s; animation-delay:0.8s; }
+    .px:nth-child(4)  { width:2px;height:2px; left:40%; top:55%; --op:.4; --dx:-70px; --dy:30px;  animation-duration:2.5s; animation-delay:1.2s; }
+    .px:nth-child(5)  { width:4px;height:4px; left:62%; top:35%; --op:.7; --dx:50px;  --dy:-50px; animation-duration:3.8s; animation-delay:0.2s; }
+    .px:nth-child(6)  { width:3px;height:3px; left:48%; top:65%; --op:.5; --dx:-30px; --dy:60px;  animation-duration:3.0s; animation-delay:0.6s; }
+    .px:nth-child(7)  { width:6px;height:6px; left:55%; top:45%; --op:.8; --dx:70px;  --dy:-20px; animation-duration:4.0s; animation-delay:1.0s; }
+    .px:nth-child(8)  { width:2px;height:2px; left:38%; top:38%; --op:.4; --dx:-60px; --dy:-55px; animation-duration:2.6s; animation-delay:1.5s; }
+    .px:nth-child(9)  { width:4px;height:4px; left:60%; top:60%; --op:.6; --dx:45px;  --dy:50px;  animation-duration:3.3s; animation-delay:0.3s; }
+    .px:nth-child(10) { width:3px;height:3px; left:42%; top:48%; --op:.5; --dx:-45px; --dy:10px;  animation-duration:2.9s; animation-delay:0.9s; }
+    .px:nth-child(11) { width:5px;height:2px; left:65%; top:42%; --op:.6; --dx:55px;  --dy:-35px; animation-duration:3.6s; animation-delay:1.3s; }
+    .px:nth-child(12) { width:2px;height:5px; left:35%; top:62%; --op:.4; --dx:-65px; --dy:45px;  animation-duration:2.7s; animation-delay:0.7s; }
+    .px:nth-child(13) { width:4px;height:4px; left:50%; top:28%; --op:.7; --dx:35px;  --dy:-70px; animation-duration:3.9s; animation-delay:0.1s; }
+    .px:nth-child(14) { width:3px;height:3px; left:44%; top:70%; --op:.5; --dx:-40px; --dy:65px;  animation-duration:3.1s; animation-delay:1.1s; }
+    .px:nth-child(15) { width:5px;height:5px; left:57%; top:25%; --op:.6; --dx:65px;  --dy:-65px; animation-duration:4.2s; animation-delay:0.5s; }
+    .px:nth-child(16) { width:2px;height:2px; left:36%; top:45%; --op:.3; --dx:-55px; --dy:-25px; animation-duration:2.4s; animation-delay:1.8s; }
+    .px:nth-child(17) { width:4px;height:3px; left:63%; top:68%; --op:.5; --dx:42px;  --dy:55px;  animation-duration:3.4s; animation-delay:0.8s; }
+    .px:nth-child(18) { width:3px;height:4px; left:47%; top:22%; --op:.6; --dx:-35px; --dy:-75px; animation-duration:2.8s; animation-delay:1.6s; }
+    .px:nth-child(19) { width:6px;height:3px; left:53%; top:72%; --op:.7; --dx:48px;  --dy:70px;  animation-duration:3.7s; animation-delay:0.4s; }
+    .px:nth-child(20) { width:2px;height:6px; left:40%; top:32%; --op:.4; --dx:-42px; --dy:-48px; animation-duration:3.0s; animation-delay:1.4s; }
+
+    /* Phone silhouette (subtle) */
+    .phone-outline {
+      position: absolute;
+      right: 30px;
+      bottom: 50px;
+      width: 52px;
+      height: 88px;
+      border: 1.5px solid rgba(201,168,76,0.2);
+      border-radius: 8px;
+      animation: phonePulse 4s ease-in-out infinite;
+    }
+    .phone-outline::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 2px;
+      background: rgba(201,168,76,0.2);
+      border-radius: 1px;
+    }
+    .phone-outline::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 50%;
+    }
+
+    @keyframes phonePulse {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 0.8; }
+    }
+
+    /* Arrow between card and phone */
+    .arrow-svg {
+      position: absolute;
+      bottom: 68px;
+      left: 50%;
+      transform: translateX(-10px);
+      opacity: 0.25;
+      animation: arrowPulse 4s ease-in-out infinite;
+    }
+    @keyframes arrowPulse {
+      0%, 100% { opacity: 0.15; transform: translateX(-10px); }
+      50%       { opacity: 0.35; transform: translateX(-4px); }
+    }
+
+    .left-caption {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--text-dim);
+      opacity: 0.7;
+      line-height: 1.6;
+      max-width: 260px;
+    }
+
+    /* ── Right panel — form ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 4rem;
+      background: var(--bg-card);
+    }
+
+    .form-logo {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+
+    .form-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.15em;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+
+    .form-subtitle {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      margin-bottom: 2.4rem;
+      text-align: center;
+    }
+
+    /* Gold divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 2rem;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .divider-diamond {
+      width: 5px; height: 5px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* ── Form fields ── */
+    .signin-form {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .field-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      background: rgba(201,168,76,0.03);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-bottom-color: rgba(201,168,76,0.3);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: all 0.3s;
+      width: 100%;
+    }
+    .field-input::placeholder { color: var(--text-dim); opacity: 0.4; }
+    .field-input:focus {
+      border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.05);
+      box-shadow: 0 2px 12px rgba(201,168,76,0.06);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn:hover::after { opacity: 1; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2a1f08, #4a3410);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-dim);
+      box-shadow: 0 0 20px rgba(201,168,76,0.08);
+      margin-top: 0.4rem;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3a2c0e, #5e4318);
+      border-color: var(--gold);
+      box-shadow: 0 0 28px rgba(201,168,76,0.18);
+      transform: translateY(-1px);
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-style: italic;
+      opacity: 0.6;
+      margin: 0.2rem 0;
+    }
+    .or-divider::before,
+    .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(201,168,76,0.12);
+    }
+
+    .btn-google {
+      background: rgba(255,255,255,0.03);
+      color: var(--text-dim);
+      border: 1px solid rgba(201,168,76,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      font-size: 0.72rem;
+    }
+    .btn-google:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--gold-dim);
+      color: var(--text);
+    }
+
+    .google-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer link ── */
+    .form-footer {
+      margin-top: 1.8rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .form-footer a {
+      color: var(--gold-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+      border-bottom: 1px solid transparent;
+    }
+    .form-footer a:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold-dim);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .page-layout {
+        grid-template-columns: 1fr;
+      }
+      .left-panel {
+        display: none;
+      }
+      .right-panel {
+        padding: 5rem 2rem 3rem;
+        min-height: 100vh;
+      }
+    }
+
+    /* ── Entry animations ── */
+    .right-panel > * {
+      animation: fadeInUp 0.7s ease both;
+    }
+    .right-panel > *:nth-child(1) { animation-delay: 0.05s; }
+    .right-panel > *:nth-child(2) { animation-delay: 0.12s; }
+    .right-panel > *:nth-child(3) { animation-delay: 0.18s; }
+    .right-panel > *:nth-child(4) { animation-delay: 0.24s; }
+    .right-panel > *:nth-child(5) { animation-delay: 0.30s; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-mid);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      padding: 0.8rem 1.8rem;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Back -->
+  <a href="index.html" class="back-link">← <span id="back-text">Accueil</span></a>
+
+  <!-- Language -->
+  <div class="lang-selector">
+    <button class="lang-btn active" onclick="setLang('fr')">Français</button>
+    <button class="lang-btn" onclick="setLang('en')">English</button>
+  </div>
+
+  <div class="page-layout">
+
+    <!-- LEFT — animated illustration -->
+    <div class="left-panel">
+      <div class="card-anim-wrapper">
+
+        <!-- Floating pixels -->
+        <div class="particles">
+          <div class="px"></div><div class="px"></div><div class="px"></div>
+          <div class="px"></div><div class="px"></div><div class="px"></div>
+          <div class="px"></div><div class="px"></div><div class="px"></div>
+          <div class="px"></div><div class="px"></div><div class="px"></div>
+          <div class="px"></div><div class="px"></div><div class="px"></div>
+          <div class="px"></div><div class="px"></div><div class="px"></div>
+          <div class="px"></div><div class="px"></div>
+        </div>
+
+        <!-- The card SVG -->
+        <svg class="card-svg" viewBox="0 0 120 168" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Card body -->
+          <rect x="1" y="1" width="118" height="166" rx="8" fill="#110e09" stroke="#c9a84c" stroke-width="1.2"/>
+          <!-- Inner border -->
+          <rect x="6" y="6" width="108" height="156" rx="5" stroke="rgba(201,168,76,0.25)" stroke-width="0.6" fill="none"/>
+
+          <!-- Top-left rank & suit -->
+          <text x="10" y="22" font-family="Georgia,serif" font-size="16" fill="#c9a84c" font-weight="bold">A</text>
+          <text x="11" y="36" font-family="Georgia,serif" font-size="12" fill="#8b1a1a">♥</text>
+
+          <!-- Center suit large -->
+          <text x="60" y="100" font-family="Georgia,serif" font-size="52" fill="#8b1a1a"
+                text-anchor="middle" dominant-baseline="middle">♥</text>
+
+          <!-- Bottom-right rank & suit (rotated) -->
+          <text x="110" y="148" font-family="Georgia,serif" font-size="16" fill="#c9a84c"
+                font-weight="bold" text-anchor="middle" transform="rotate(180 110 148)">A</text>
+          <text x="109" y="134" font-family="Georgia,serif" font-size="12" fill="#8b1a1a"
+                text-anchor="middle" transform="rotate(180 109 134)">♥</text>
+
+          <!-- Shimmer line -->
+          <line x1="6" y1="84" x2="114" y2="84" stroke="rgba(201,168,76,0.08)" stroke-width="0.5"/>
+        </svg>
+
+        <!-- Phone outline -->
+        <div class="phone-outline"></div>
+
+        <!-- Arrow -->
+        <svg class="arrow-svg" width="48" height="20" viewBox="0 0 48 20" fill="none">
+          <path d="M2 10 Q24 2 46 10" stroke="#c9a84c" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+          <path d="M40 6 L46 10 L40 14" stroke="#c9a84c" stroke-width="1" fill="none"/>
+        </svg>
+      </div>
+
+      <p class="left-caption" id="left-caption">
+        Vos cartes, partout où vous allez
+      </p>
+    </div>
+
+    <!-- RIGHT — form -->
+    <div class="right-panel">
+      <div class="form-logo">Card Crypt</div>
+      <h1 class="form-title" id="form-title">Connexion</h1>
+      <p class="form-subtitle" id="form-subtitle">Retrouvez votre place à la table</p>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-diamond"></div>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="signin-form">
+        <div class="field-group">
+          <label class="field-label" id="label-email">Courriel</label>
+          <input class="field-input" id="input-email" type="email" placeholder="votre@courriel.com" />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" id="label-password">Mot de passe</label>
+          <input class="field-input" id="input-password" type="password" placeholder="••••••••" />
+        </div>
+
+        <button class="btn btn-primary" id="btn-signin" onclick="handleSignIn()">
+          Se connecter
+        </button>
+
+        <div class="or-divider"><span id="or-text">ou</span></div>
+
+        <button class="btn btn-google" id="btn-google" onclick="handleGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span id="google-text">Continuer avec Google</span>
+        </button>
+      </div>
+
+      <p class="form-footer" id="form-footer">
+        Pas encore de compte ? <a href="signUp.html" id="signup-link">S'inscrire</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const translations = {
+      fr: {
+        'back-text': 'Accueil',
+        'form-title': 'Connexion',
+        'form-subtitle': 'Retrouvez votre place à la table',
+        'left-caption': 'Vos cartes, partout où vous allez',
+        'label-email': 'Courriel',
+        'input-email-placeholder': 'votre@courriel.com',
+        'label-password': 'Mot de passe',
+        'input-password-placeholder': '••••••••',
+        'btn-signin': 'Se connecter',
+        'or-text': 'ou',
+        'google-text': 'Continuer avec Google',
+        'form-footer': "Pas encore de compte ?",
+        'signup-link': "S'inscrire",
+        'toast-empty': 'Veuillez remplir tous les champs.',
+        'toast-ok': 'Connexion en cours...',
+      },
+      en: {
+        'back-text': 'Home',
+        'form-title': 'Sign In',
+        'form-subtitle': 'Reclaim your seat at the table',
+        'left-caption': 'Your cards, wherever you go',
+        'label-email': 'Email',
+        'input-email-placeholder': 'your@email.com',
+        'label-password': 'Password',
+        'input-password-placeholder': '••••••••',
+        'btn-signin': 'Sign In',
+        'or-text': 'or',
+        'google-text': 'Continue with Google',
+        'form-footer': "Don't have an account?",
+        'signup-link': "Sign Up",
+        'toast-empty': 'Please fill in all fields.',
+        'toast-ok': 'Signing in...',
+      }
+    };
+
+    let currentLang = 'fr';
+
+    function setLang(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+      document.getElementById('back-text').textContent = t['back-text'];
+      document.getElementById('form-title').textContent = t['form-title'];
+      document.getElementById('form-subtitle').textContent = t['form-subtitle'];
+      document.getElementById('left-caption').textContent = t['left-caption'];
+      document.getElementById('label-email').textContent = t['label-email'];
+      document.getElementById('input-email').placeholder = t['input-email-placeholder'];
+      document.getElementById('label-password').textContent = t['label-password'];
+      document.getElementById('input-password').placeholder = t['input-password-placeholder'];
+      document.getElementById('btn-signin').textContent = t['btn-signin'];
+      document.getElementById('or-text').textContent = t['or-text'];
+      document.getElementById('google-text').textContent = t['google-text'];
+      document.getElementById('form-footer').childNodes[0].textContent = t['form-footer'] + ' ';
+      document.getElementById('signup-link').textContent = t['signup-link'];
+    }
+
+    function handleSignIn() {
+      const t = translations[currentLang];
+      const email = document.getElementById('input-email').value.trim();
+      const pw = document.getElementById('input-password').value.trim();
+      if (!email || !pw) { showToast(t['toast-empty']); return; }
+      showToast(t['toast-ok']);
+      // TODO: Firebase auth
+    }
+
+    function handleGoogle() {
+      showToast('Google Sign-In — à connecter avec Firebase');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

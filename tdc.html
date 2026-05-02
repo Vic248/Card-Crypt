@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Crypt — Trou du Cul</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8cc7a;
+      --gold-dim: #7a5f28;
+      --bg-deep: #0a0705;
+      --bg-card: #110e09;
+      --bg-mid: #1a1409;
+      --bg-hover: #1e1609;
+      --text: #e8ddc8;
+      --text-dim: #9a8a6a;
+      --red: #8b1a1a;
+      --green: #27ae60;
+      --green-dim: #1a6b3a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-deep);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ══════════════════════════════
+       NAVBAR
+    ══════════════════════════════ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10,7,5,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      padding: 0 2.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .back-link {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold); }
+
+    .nav-sep { color: rgba(201,168,76,0.2); }
+
+    .navbar-logo {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 1.05rem;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .lang-selector {
+      display: flex;
+      gap: 0.3rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+    }
+    .lang-btn {
+      background: none;
+      border: 1px solid var(--gold-dim);
+      color: var(--text-dim);
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.07);
+    }
+
+    /* ══════════════════════════════
+       MAIN
+    ══════════════════════════════ */
+    .main {
+      position: relative;
+      z-index: 2;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 2.8rem;
+      animation: fadeInDown 0.5s ease both;
+    }
+
+    .page-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      letter-spacing: 0.12em;
+      color: var(--text);
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-suits {
+      font-size: 1rem;
+      letter-spacing: 0.5em;
+      opacity: 0.4;
+    }
+    .s { color: var(--text-dim); }
+    .h { color: var(--red); }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+      margin-bottom: 2.5rem;
+      animation: fadeInDown 0.5s ease 0.1s both;
+    }
+
+    .tab-btn {
+      flex: 1;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.9rem 1rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+
+    .tab-btn.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .tab-btn .tab-icon {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 0.2rem;
+      opacity: 0.6;
+    }
+
+    /* ── Panel ── */
+    .tab-panel {
+      display: none;
+      animation: fadeInUp 0.35s ease both;
+    }
+    .tab-panel.active { display: block; }
+
+    /* ── Form fields ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 1.4rem;
+    }
+    .form-grid.single { grid-template-columns: 1fr; }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .field-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      background: rgba(201,168,76,0.03);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-bottom-color: rgba(201,168,76,0.3);
+      color: var(--text);
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      padding: 0.65rem 0.9rem;
+      outline: none;
+      transition: all 0.3s;
+      width: 100%;
+    }
+    .field-input::placeholder { color: var(--text-dim); opacity: 0.4; }
+    .field-input:focus {
+      border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.05);
+    }
+
+    /* ── Slider ── */
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .slider-value {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: var(--gold);
+      min-width: 2rem;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: rgba(201,168,76,0.15);
+      outline: none;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--gold);
+      border: 2px solid var(--bg-deep);
+      box-shadow: 0 0 6px rgba(201,168,76,0.4);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* ── Toggle switch ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(201,168,76,0.07);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-info {}
+    .toggle-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      color: var(--text);
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+    .toggle-desc {
+      font-size: 0.8rem;
+      font-style: italic;
+      color: var(--text-dim);
+    }
+
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 22px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: all 0.3s;
+    }
+    .toggle input:checked + .toggle-track {
+      background: rgba(201,168,76,0.2);
+      border-color: var(--gold);
+    }
+    .toggle input:checked + .toggle-track::after {
+      left: calc(100% - 18px);
+      background: var(--gold);
+      box-shadow: 0 0 6px rgba(201,168,76,0.5);
+    }
+
+    /* ── Section box ── */
+    .section-box {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .section-box-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+    }
+
+    /* ── Difficulty selector ── */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+    }
+
+    .diff-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      padding: 0.6rem 0.5rem;
+      background: rgba(201,168,76,0.03);
+      border: 1px solid rgba(201,168,76,0.12);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .diff-btn:hover {
+      border-color: var(--gold-dim);
+      color: var(--text);
+    }
+    .diff-btn.active {
+      background: rgba(201,168,76,0.1);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ── Waiting room ── */
+    .waiting-room {
+      display: none;
+      animation: fadeInUp 0.4s ease both;
+    }
+    .waiting-room.visible { display: block; }
+
+    .lobby-code-box {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.2);
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.4rem;
+    }
+
+    .lobby-code-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+    }
+
+    .lobby-code-value {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 1.6rem;
+      color: var(--gold);
+      letter-spacing: 0.3em;
+    }
+
+    .copy-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      padding: 0.35rem 0.8rem;
+      background: none;
+      border: 1px solid rgba(201,168,76,0.2);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    .players-list {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.1);
+      margin-bottom: 1.4rem;
+    }
+
+    .players-list-header {
+      padding: 0.8rem 1.2rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .players-count {
+      color: var(--gold);
+    }
+
+    .player-slot {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.75rem 1.2rem;
+      border-bottom: 1px solid rgba(201,168,76,0.05);
+      transition: background 0.2s;
+    }
+    .player-slot:last-child { border-bottom: none; }
+    .player-slot.filled { }
+    .player-slot.empty { opacity: 0.3; }
+
+    .player-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green { background: var(--green); box-shadow: 0 0 6px rgba(39,174,96,0.5); }
+    .dot-empty { background: rgba(201,168,76,0.15); }
+
+    .player-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--text);
+      flex: 1;
+    }
+    .player-slot.empty .player-name { color: var(--text-dim); font-style: italic; }
+
+    .player-host-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-dim);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      padding: 0.85rem 1.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn:hover::after { opacity: 1; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2a1f08, #4a3410);
+      color: var(--gold-light);
+      border: 1px solid var(--gold-dim);
+      box-shadow: 0 0 20px rgba(201,168,76,0.08);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3a2c0e, #5e4318);
+      border-color: var(--gold);
+      box-shadow: 0 0 28px rgba(201,168,76,0.18);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid rgba(139,26,26,0.3);
+      font-size: 0.68rem;
+    }
+    .btn-danger:hover {
+      border-color: var(--red);
+      color: #c0392b;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.8rem;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Pulsing waiting dots */
+    .waiting-text {
+      font-style: italic;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+    .dot-pulse { animation: dotPulse 1.4s ease-in-out infinite; }
+    .dot-pulse:nth-child(2) { animation-delay: 0.2s; }
+    .dot-pulse:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse {
+      0%, 80%, 100% { opacity: 0.2; }
+      40% { opacity: 1; }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-mid);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      padding: 0.8rem 1.8rem;
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.4s ease;
+      white-space: nowrap;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .diff-grid { grid-template-columns: repeat(3, 1fr); }
+      .main { padding: 2rem 1.2rem 4rem; }
+      .navbar { padding: 0 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="home.html" class="back-link" id="back-link">← Bibliothèque</a>
+      <span class="nav-sep">·</span>
+      <a href="index.html" class="navbar-logo">Card Crypt</a>
+    </div>
+    <div class="navbar-right">
+      <div class="lang-selector">
+        <button class="lang-btn active" onclick="setLang('fr')">Français</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="page-header">
+      <p class="page-eyebrow" id="eyebrow">Jeu de cartes</p>
+      <h1 class="page-title" id="page-title">Trou du Cul</h1>
+      <div class="page-suits">
+        <span class="s">♠</span>
+        <span class="h">♥</span>
+        <span class="h">♦</span>
+        <span class="s">♣</span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('create')" id="tab-create">
+        <span class="tab-icon">✦</span>
+        <span id="tab-create-label">Créer</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('join')" id="tab-join">
+        <span class="tab-icon">→</span>
+        <span id="tab-join-label">Rejoindre</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('bot')" id="tab-bot">
+        <span class="tab-icon">⚙</span>
+        <span id="tab-bot-label">Bots</span>
+      </button>
+    </div>
+
+    <!-- ═══════════════════════
+         TAB: CREATE
+    ═══════════════════════ -->
+    <div class="tab-panel active" id="panel-create">
+
+      <!-- Form (shown before creating) -->
+      <div id="create-form">
+
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label" id="label-nickname-c">Surnom</label>
+            <input class="field-input" id="nickname-c" type="text" placeholder="Votre surnom..." maxlength="20" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="label-lobbyname">Nom du lobby</label>
+            <input class="field-input" id="lobby-name" type="text" placeholder="Ma partie..." maxlength="24" />
+          </div>
+        </div>
+
+        <!-- Settings box -->
+        <div class="section-box">
+          <div class="section-box-title" id="settings-title">Paramètres de partie</div>
+
+          <!-- Innings slider -->
+          <div class="slider-group" style="margin-bottom:1.4rem;">
+            <div class="slider-header">
+              <span class="field-label" id="label-innings">Nombre de manches</span>
+              <span class="slider-value" id="innings-val">2</span>
+            </div>
+            <input type="range" min="1" max="10" value="2" id="innings-slider"
+              oninput="document.getElementById('innings-val').textContent = this.value" />
+          </div>
+
+          <!-- Toggles -->
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label" id="label-revolution">Règle Révolution</span>
+              <span class="toggle-desc" id="desc-revolution">Inverse l'ordre des cartes</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-revolution" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label" id="label-trade">Échange de cartes</span>
+              <span class="toggle-desc" id="desc-trade">Président & VP choisissent leurs cartes</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-trade" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-create" onclick="handleCreate()">
+          ✦ <span id="btn-create-label">Créer la partie</span>
+        </button>
+      </div>
+
+      <!-- Waiting room (shown after creating) -->
+      <div class="waiting-room" id="waiting-room">
+
+        <div class="lobby-code-box">
+          <div>
+            <div class="lobby-code-label" id="label-code">Code du lobby</div>
+            <div class="lobby-code-value" id="lobby-code-display">AB12</div>
+          </div>
+          <button class="copy-btn" id="btn-copy" onclick="copyCode()">⎘ Copier</button>
+        </div>
+
+        <div class="players-list" id="players-list">
+          <div class="players-list-header">
+            <span id="waiting-label">En attente de joueurs<span class="dot-pulse">.</span><span class="dot-pulse">.</span><span class="dot-pulse">.</span></span>
+            <span class="players-count" id="players-count">1 / 6</span>
+          </div>
+          <!-- Players populated by JS -->
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-start" onclick="handleStart()">
+            ▶ <span id="btn-start-label">Lancer la partie</span>
+          </button>
+          <button class="btn btn-danger" style="width:auto; padding: 0.85rem 1.2rem;" id="btn-cancel" onclick="handleCancel()">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════
+         TAB: JOIN
+    ═══════════════════════ -->
+    <div class="tab-panel" id="panel-join">
+
+      <div class="section-box">
+        <div class="section-box-title" id="join-title">Rejoindre une partie</div>
+
+        <div class="form-grid" style="margin-bottom:0;">
+          <div class="field-group">
+            <label class="field-label" id="label-nickname-j">Surnom</label>
+            <input class="field-input" id="nickname-j" type="text" placeholder="Votre surnom..." maxlength="20" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="label-code-j">Code du lobby</label>
+            <input class="field-input" id="lobby-code-input" type="text" placeholder="AB12" maxlength="6"
+              style="text-transform:uppercase; letter-spacing:0.3em; font-family:'Cinzel',serif;"
+              oninput="this.value = this.value.toUpperCase()" />
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-join" onclick="handleJoin()">
+        → <span id="btn-join-label">Rejoindre</span>
+      </button>
+    </div>
+
+    <!-- ═══════════════════════
+         TAB: BOT
+    ═══════════════════════ -->
+    <div class="tab-panel" id="panel-bot">
+
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="field-label" id="label-nickname-b">Surnom</label>
+          <input class="field-input" id="nickname-b" type="text" placeholder="Votre surnom..." maxlength="20" />
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="section-box">
+        <div class="section-box-title" id="bot-settings-title">Paramètres de partie</div>
+
+        <div class="slider-group" style="margin-bottom:1.4rem;">
+          <div class="slider-header">
+            <span class="field-label" id="label-innings-b">Nombre de manches</span>
+            <span class="slider-value" id="innings-val-b">2</span>
+          </div>
+          <input type="range" min="1" max="10" value="2" id="innings-slider-b"
+            oninput="document.getElementById('innings-val-b').textContent = this.value" />
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label" id="label-revolution-b">Règle Révolution</span>
+            <span class="toggle-desc" id="desc-revolution-b">Inverse l'ordre des cartes</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-revolution-b" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label" id="label-trade-b">Échange de cartes</span>
+            <span class="toggle-desc" id="desc-trade-b">Président & VP choisissent leurs cartes</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-trade-b" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Bot difficulty -->
+      <div class="section-box">
+        <div class="section-box-title" id="bot-diff-title">Difficulté des bots</div>
+        <div class="diff-grid">
+          <button class="diff-btn active" onclick="selectDiff(this,'easy')" id="diff-easy">
+            <div style="font-size:1rem;margin-bottom:0.2rem;">🌱</div>
+            <span id="diff-easy-label">Facile</span>
+          </button>
+          <button class="diff-btn" onclick="selectDiff(this,'medium')" id="diff-medium">
+            <div style="font-size:1rem;margin-bottom:0.2rem;">⚔️</div>
+            <span id="diff-medium-label">Moyen</span>
+          </button>
+          <button class="diff-btn" onclick="selectDiff(this,'hard')" id="diff-hard">
+            <div style="font-size:1rem;margin-bottom:0.2rem;">💀</div>
+            <span id="diff-hard-label">Difficile</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Players count for bot game -->
+      <div class="section-box">
+        <div class="section-box-title" id="bot-players-title">Nombre de joueurs (incluant vous)</div>
+        <div class="slider-group">
+          <div class="slider-header">
+            <span class="field-label" id="label-bot-count">Joueurs</span>
+            <span class="slider-value" id="bot-count-val">4</span>
+          </div>
+          <input type="range" min="3" max="6" value="4" id="bot-count-slider"
+            oninput="document.getElementById('bot-count-val').textContent = this.value" />
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-bot-start" onclick="handleBotStart()">
+        ▶ <span id="btn-bot-label">Jouer contre les bots</span>
+      </button>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ══════════════════════════════
+    // TRANSLATIONS
+    // ══════════════════════════════
+    const T = {
+      fr: {
+        'back-link': '← Bibliothèque',
+        'eyebrow': 'Jeu de cartes',
+        'page-title': 'Trou du Cul',
+        'tab-create-label': 'Créer',
+        'tab-join-label': 'Rejoindre',
+        'tab-bot-label': 'Bots',
+        'label-nickname-c': 'Surnom',
+        'placeholder-nickname': 'Votre surnom...',
+        'label-lobbyname': 'Nom du lobby',
+        'placeholder-lobbyname': 'Ma partie...',
+        'settings-title': 'Paramètres de partie',
+        'label-innings': 'Nombre de manches',
+        'label-revolution': 'Règle Révolution',
+        'desc-revolution': 'Inverse l\'ordre des cartes',
+        'label-trade': 'Échange de cartes',
+        'desc-trade': 'Président & VP choisissent leurs cartes',
+        'btn-create-label': 'Créer la partie',
+        'label-code': 'Code du lobby',
+        'btn-copy': '⎘ Copier',
+        'waiting-label': 'En attente de joueurs',
+        'btn-start-label': 'Lancer la partie',
+        'join-title': 'Rejoindre une partie',
+        'label-nickname-j': 'Surnom',
+        'label-code-j': 'Code du lobby',
+        'btn-join-label': 'Rejoindre',
+        'label-nickname-b': 'Surnom',
+        'bot-settings-title': 'Paramètres de partie',
+        'label-innings-b': 'Nombre de manches',
+        'label-revolution-b': 'Règle Révolution',
+        'desc-revolution-b': 'Inverse l\'ordre des cartes',
+        'label-trade-b': 'Échange de cartes',
+        'desc-trade-b': 'Président & VP choisissent leurs cartes',
+        'bot-diff-title': 'Difficulté des bots',
+        'diff-easy-label': 'Facile',
+        'diff-medium-label': 'Moyen',
+        'diff-hard-label': 'Difficile',
+        'bot-players-title': 'Nombre de joueurs (incluant vous)',
+        'label-bot-count': 'Joueurs',
+        'btn-bot-label': 'Jouer contre les bots',
+        'toast-created': 'Partie créée !',
+        'toast-copied': 'Code copié !',
+        'toast-cancelled': 'Partie annulée.',
+        'toast-err-nick': 'Entrez un surnom.',
+        'toast-err-lobby': 'Entrez un nom de lobby.',
+        'toast-err-code': 'Entrez un code de lobby.',
+        'toast-joined': 'Connexion au lobby...',
+        'toast-starting': 'Lancement de la partie !',
+        'toast-bot-start': 'Lancement contre les bots !',
+        'waiting-for': 'En attente de joueurs',
+        'slot-empty': 'En attente...',
+        'host-label': 'Hôte',
+        'players-label': 'joueurs',
+      },
+      en: {
+        'back-link': '← Library',
+        'eyebrow': 'Card Game',
+        'page-title': 'Asshole',
+        'tab-create-label': 'Create',
+        'tab-join-label': 'Join',
+        'tab-bot-label': 'Bots',
+        'label-nickname-c': 'Nickname',
+        'placeholder-nickname': 'Your nickname...',
+        'label-lobbyname': 'Lobby Name',
+        'placeholder-lobbyname': 'My game...',
+        'settings-title': 'Game Settings',
+        'label-innings': 'Number of Rounds',
+        'label-revolution': 'Revolution Rule',
+        'desc-revolution': 'Reverses card order',
+        'label-trade': 'Card Trade',
+        'desc-trade': 'President & VP choose their cards',
+        'btn-create-label': 'Create Game',
+        'label-code': 'Lobby Code',
+        'btn-copy': '⎘ Copy',
+        'waiting-label': 'Waiting for players',
+        'btn-start-label': 'Start Game',
+        'join-title': 'Join a Game',
+        'label-nickname-j': 'Nickname',
+        'label-code-j': 'Lobby Code',
+        'btn-join-label': 'Join',
+        'label-nickname-b': 'Nickname',
+        'bot-settings-title': 'Game Settings',
+        'label-innings-b': 'Number of Rounds',
+        'label-revolution-b': 'Revolution Rule',
+        'desc-revolution-b': 'Reverses card order',
+        'label-trade-b': 'Card Trade',
+        'desc-trade-b': 'President & VP choose their cards',
+        'bot-diff-title': 'Bot Difficulty',
+        'diff-easy-label': 'Easy',
+        'diff-medium-label': 'Medium',
+        'diff-hard-label': 'Hard',
+        'bot-players-title': 'Number of Players (including you)',
+        'label-bot-count': 'Players',
+        'btn-bot-label': 'Play vs Bots',
+        'toast-created': 'Game created!',
+        'toast-copied': 'Code copied!',
+        'toast-cancelled': 'Game cancelled.',
+        'toast-err-nick': 'Enter a nickname.',
+        'toast-err-lobby': 'Enter a lobby name.',
+        'toast-err-code': 'Enter a lobby code.',
+        'toast-joined': 'Connecting to lobby...',
+        'toast-starting': 'Starting the game!',
+        'toast-bot-start': 'Starting vs bots!',
+        'waiting-for': 'Waiting for players',
+        'slot-empty': 'Waiting...',
+        'host-label': 'Host',
+        'players-label': 'players',
+      }
+    };
+
+    let currentLang = 'fr';
+    let currentTab = 'create';
+    let selectedDiff = 'easy';
+    let myNickname = '';
+    let lobbyCode = '';
+
+    // Demo players for waiting room
+    const demoPlayers = [
+      { name: null, host: false },
+      { name: null, host: false },
+      { name: null, host: false },
+      { name: null, host: false },
+      { name: null, host: false },
+    ];
+
+    function setLang(lang) {
+      currentLang = lang;
+      const t = T[lang];
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+      const ids = ['back-link','eyebrow','page-title','tab-create-label','tab-join-label',
+        'tab-bot-label','label-nickname-c','label-lobbyname','settings-title','label-innings',
+        'label-revolution','desc-revolution','label-trade','desc-trade','btn-create-label',
+        'label-code','waiting-label','btn-start-label','join-title','label-nickname-j',
+        'label-code-j','btn-join-label','label-nickname-b','bot-settings-title','label-innings-b',
+        'label-revolution-b','desc-revolution-b','label-trade-b','desc-trade-b','bot-diff-title',
+        'diff-easy-label','diff-medium-label','diff-hard-label','bot-players-title',
+        'label-bot-count','btn-bot-label'];
+
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id]) el.textContent = t[id];
+      });
+
+      document.getElementById('nickname-c').placeholder = t['placeholder-nickname'];
+      document.getElementById('lobby-name').placeholder = t['placeholder-lobbyname'];
+      document.getElementById('nickname-j').placeholder = t['placeholder-nickname'];
+      document.getElementById('nickname-b').placeholder = t['placeholder-nickname'];
+      document.getElementById('btn-copy').textContent = t['btn-copy'];
+
+      // Rebuild waiting room if visible
+      if (document.getElementById('waiting-room').classList.contains('visible')) {
+        renderWaitingRoom();
+      }
+    }
+
+    // ── Tabs ──
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    }
+
+    // ── Difficulty ──
+    function selectDiff(btn, diff) {
+      selectedDiff = diff;
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // ── Generate lobby code ──
+    function generateCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      return Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
+
+    // ── Create ──
+    function handleCreate() {
+      const t = T[currentLang];
+      const nick = document.getElementById('nickname-c').value.trim();
+      const name = document.getElementById('lobby-name').value.trim();
+      if (!nick) { showToast(t['toast-err-nick']); return; }
+      if (!name) { showToast(t['toast-err-lobby']); return; }
+
+      myNickname = nick;
+      lobbyCode = generateCode();
+
+      document.getElementById('lobby-code-display').textContent = lobbyCode;
+      document.getElementById('create-form').style.display = 'none';
+      document.getElementById('waiting-room').classList.add('visible');
+      renderWaitingRoom();
+      showToast(t['toast-created']);
+    }
+
+    function renderWaitingRoom() {
+      const t = T[currentLang];
+      const list = document.getElementById('players-list');
+      const header = list.querySelector('.players-list-header');
+
+      // Rebuild slots
+      const existing = list.querySelectorAll('.player-slot');
+      existing.forEach(e => e.remove());
+
+      // Host (me)
+      const hostSlot = createPlayerSlot(myNickname, true, true);
+      list.appendChild(hostSlot);
+
+      // Empty slots
+      for (let i = 0; i < 5; i++) {
+        list.appendChild(createPlayerSlot(null, false, false));
+      }
+
+      document.getElementById('players-count').textContent = '1 / 6';
+    }
+
+    function createPlayerSlot(name, isHost, filled) {
+      const t = T[currentLang];
+      const div = document.createElement('div');
+      div.className = 'player-slot ' + (filled ? 'filled' : 'empty');
+
+      const dot = document.createElement('div');
+      dot.className = 'player-dot ' + (filled ? 'dot-green' : 'dot-empty');
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'player-name';
+      nameEl.textContent = name || t['slot-empty'];
+
+      div.appendChild(dot);
+      div.appendChild(nameEl);
+
+      if (isHost) {
+        const badge = document.createElement('span');
+        badge.className = 'player-host-badge';
+        badge.textContent = t['host-label'];
+        div.appendChild(badge);
+      }
+
+      return div;
+    }
+
+    function copyCode() {
+      const t = T[currentLang];
+      navigator.clipboard.writeText(lobbyCode).catch(() => {});
+      showToast(t['toast-copied']);
+    }
+
+    function handleCancel() {
+      const t = T[currentLang];
+      document.getElementById('waiting-room').classList.remove('visible');
+      document.getElementById('create-form').style.display = 'block';
+      showToast(t['toast-cancelled']);
+    }
+
+    function handleStart() {
+      const t = T[currentLang];
+      showToast(t['toast-starting']);
+      // TODO: navigate to tdc game page
+    }
+
+    // ── Join ──
+    function handleJoin() {
+      const t = T[currentLang];
+      const nick = document.getElementById('nickname-j').value.trim();
+      const code = document.getElementById('lobby-code-input').value.trim();
+      if (!nick) { showToast(t['toast-err-nick']); return; }
+      if (!code) { showToast(t['toast-err-code']); return; }
+      showToast(t['toast-joined']);
+      // TODO: Firebase join lobby
+    }
+
+    // ── Bot ──
+    function handleBotStart() {
+      const t = T[currentLang];
+      const nick = document.getElementById('nickname-b').value.trim();
+      if (!nick) { showToast(t['toast-err-nick']); return; }
+      showToast(t['toast-bot-start']);
+      // TODO: start solo bot game
+    }
+
+    // ── Toast ──
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+  </script>
+</body>
+</html>
